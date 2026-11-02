@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { DEFAULT_FILTERS, applyFilters, countValues, isBrief, parseFilters, serializeFilters } from './filters';
-import type { HiringFields, HiringPost, Rates } from './types';
+import type { HiringFields, HiringPost, Post, Rates } from './types';
 
 const RATES: Rates = { date: '2026-10-30', cad_per_unit: { CAD: 1, USD: 1.396, GBP: 1.8699 } };
 
@@ -51,6 +51,13 @@ describe('filters', () => {
     expect(isBrief(posts[5])).toBe(false);
     const ids = applyFilters(posts, 'hiring', DEFAULT_FILTERS, RATES, null).map((post) => post.id);
     expect(ids).toEqual([6, 2, 1, 5]);
+  });
+
+  test('matches candidates open to any chosen arrangement', () => {
+    const fields = { ...POSTS[0].fields, roles: [], role_categories: [], remote: 'remote', arrangements: ['remote', 'onsite'] };
+    const candidate = { ...POSTS[0], fields } as unknown as Post;
+    const filters = { ...DEFAULT_FILTERS, remote: ['onsite' as const] };
+    expect(applyFilters([candidate], 'seeking', filters, RATES, null)).toHaveLength(1);
   });
 
   test('matches any chosen kind of work', () => {

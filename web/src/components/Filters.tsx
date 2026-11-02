@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'preact/hooks';
-import { countValues, DEFAULT_FILTERS, type Filters as FilterState } from '../lib/filters';
+import { arrangementsOf, countValues, DEFAULT_FILTERS, type Filters as FilterState } from '../lib/filters';
 import type { HiringPost, Kind, Post, Remote } from '../lib/types';
 
 interface Props {
@@ -51,7 +51,7 @@ export function Filters({ kind, posts, filters, update }: Props) {
   const counts = useMemo(() => {
     const jobs = posts as HiringPost[];
     return {
-      remote: new Map(countValues(posts, (post) => (post.fields.remote ? [post.fields.remote] : []))),
+      remote: new Map(countValues(posts, arrangementsOf)),
       work: countValues(posts, (post) => post.fields.role_categories),
       tech: countValues(posts, (post) => post.fields.technologies),
       industries: hiring ? countValues(jobs, (post) => post.fields.industries) : [],

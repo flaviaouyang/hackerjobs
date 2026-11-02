@@ -126,10 +126,16 @@ function locations(post: Post): string[] {
   return [...post.fields.locations, ...roles];
 }
 
+/** How a job is worked, or every way a candidate is open to working. */
+export function arrangementsOf(post: Post): Remote[] {
+  if ('arrangements' in post.fields) return post.fields.arrangements;
+  return post.fields.remote ? [post.fields.remote] : [];
+}
+
 function matchesShared(post: Post, filters: Filters, hits: Set<number> | null): boolean {
   if (hits && !hits.has(post.id)) return false;
   if (filters.hideReposts && post.repost_of !== null) return false;
-  if (filters.remote.length && !(post.fields.remote && filters.remote.includes(post.fields.remote))) return false;
+  if (filters.remote.length && !arrangementsOf(post).some((value) => filters.remote.includes(value))) return false;
   const place = filters.location.trim().toLowerCase();
   if (place && !locations(post).some((location) => location.toLowerCase().includes(place))) return false;
   if (filters.work.length && !post.fields.role_categories.some((category) => filters.work.includes(category))) return false;

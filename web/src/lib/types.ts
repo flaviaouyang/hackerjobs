@@ -86,6 +86,8 @@ export interface SeekingFields {
   linkedin: string | null;
   github: string | null;
   resume_url: string | null;
+  /** Every arrangement they are open to; `remote` holds a single reading. */
+  arrangements: Remote[];
   seniority: string[];
 }
 

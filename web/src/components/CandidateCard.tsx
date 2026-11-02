@@ -25,7 +25,7 @@ export function CandidateCard({ post, currency, rates, onHistory }: Props) {
   const fields = post.fields;
   const repost = post.repost_of !== null ? repostMonth(post) : null;
   const how = [
-    arrangement(fields.remote),
+    ...fields.arrangements.map(arrangement),
     fields.willing_to_relocate ? 'Open to relocation' : null,
     ...fields.employment_types.map(capitalize),
   ].filter(Boolean);
