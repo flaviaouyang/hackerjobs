@@ -1,0 +1,39 @@
+---
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
+import '../styles/tokens.css';
+import '../styles/site.css';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.svg`} type="image/svg+xml" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to results</a>
+    <slot />
+    <footer class="site">
+      <div class="wrap">
+        <span>
+          From the Hacker News “Who is hiring?” and “Who wants to be hired?” threads. Every entry links to its
+          original post.
+        </span>
+        <span>Exchange rates: <a href="https://www.bankofcanada.ca/rates/exchange/">Bank of Canada</a>.</span>
+        <a href="https://github.com/flaviaouyang/hackerjobs">Source on GitHub</a>
+      </div>
+    </footer>
+  </body>
+</html>

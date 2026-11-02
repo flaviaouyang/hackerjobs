@@ -175,7 +175,7 @@ export function applyFilters(
 }
 
 /** How many posts mention each value, most common first. */
-export function countValues(posts: Post[], values: (post: Post) => Iterable<string>): [string, number][] {
+export function countValues<P extends Post>(posts: P[], values: (post: P) => Iterable<string>): [string, number][] {
   const counts = new Map<string, number>();
   for (const post of posts) {
     for (const value of new Set(values(post))) counts.set(value, (counts.get(value) ?? 0) + 1);

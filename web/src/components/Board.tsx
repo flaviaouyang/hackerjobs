@@ -1,0 +1,199 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { applyFilters, DEFAULT_FILTERS, type Filters as FilterState, parseFilters, serializeFilters } from '../lib/filters';
+import { monthLabel } from '../lib/format';
+import { buildIndex, searchIds } from '../lib/search';
+import type { HiringPost, Index, Kind, Post, SeekingPost } from '../lib/types';
+import { CandidateCard } from './CandidateCard';
+import { Filters } from './Filters';
+import { HistoryDialog } from './HistoryDialog';
+import { JobCard } from './JobCard';
+
+const BASE = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const PAGE_SIZE = 50;
+const COMMON_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'CHF', 'INR', 'JPY', 'SGD'];
+const LABELS: Record<Kind, string> = { hiring: 'Hiring', seeking: 'Seeking' };
+
+const months = new Map<string, Promise<Post[]>>();
+
+/** One month of posts, fetched once per page view. */
+function loadMonth(kind: Kind, month: string): Promise<Post[]> {
+  const key = `${kind}-${month}`;
+  if (!months.has(key)) {
+    months.set(
+      key,
+      fetch(`${BASE}data/${key}.json`).then((response) => {
+        if (!response.ok) throw new Error(`Could not load ${monthLabel(month)} (${response.status})`);
+        return response.json() as Promise<Post[]>;
+      }),
+    );
+  }
+  return months.get(key) as Promise<Post[]>;
+}
+
+function CloseIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  );
+}
+
+/** The whole board for one thread kind: header controls, search, filters and results. */
+export function Board({ kind }: { kind: Kind }) {
+  const [index, setIndex] = useState<Index | null>(null);
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [ready, setReady] = useState(false);
+  const [posts, setPosts] = useState<Post[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [limit, setLimit] = useState(PAGE_SIZE);
+  const [history, setHistory] = useState<Post | null>(null);
+  const drawer = useRef<HTMLDialogElement>(null);
+  const hiring = kind === 'hiring';
+
+  useEffect(() => {
+    setFilters(parseFilters(window.location.search));
+    setReady(true);
+    fetch(`${BASE}data/index.json`)
+      .then((response) => (response.ok ? response.json() : Promise.reject(new Error('Could not load the board'))))
+      .then(setIndex, (failure: Error) => setError(failure.message));
+  }, []);
+
+  const available = useMemo(() => (index ? Object.keys(index.months).sort().reverse() : []), [index]);
+  const month = filters.month && available.includes(filters.month) ? filters.month : (available[0] ?? null);
+
+  useEffect(() => {
+    if (!month) return;
+    setPosts(null);
+    loadMonth(kind, month).then(setPosts, (failure: Error) => setError(failure.message));
+  }, [kind, month]);
+
+  useEffect(() => {
+    if (ready) window.history.replaceState(null, '', `${window.location.pathname}${serializeFilters(filters)}`);
+  }, [filters, ready]);
+
+  const searchIndex = useMemo(() => (posts ? buildIndex(posts) : null), [posts]);
+  const results = useMemo(() => {
+    if (!posts || !index || !searchIndex) return [];
+    return applyFilters(posts, kind, filters, index.rates, searchIds(searchIndex, filters.q));
+  }, [posts, index, searchIndex, kind, filters]);
+  const currencies = useMemo(() => {
+    const known = index ? Object.keys(index.rates.cad_per_unit) : COMMON_CURRENCIES;
+    return [...COMMON_CURRENCIES.filter((code) => known.includes(code)), ...known.filter((code) => !COMMON_CURRENCIES.includes(code)).sort()];
+  }, [index]);
+
+  const update = useCallback((changes: Partial<FilterState>) => {
+    setFilters((current) => ({ ...current, ...changes }));
+    setLimit(PAGE_SIZE);
+  }, []);
+  const loadHistory = useCallback((other: string) => loadMonth(kind, other), [kind]);
+  const tabLink = (other: Kind) => `${BASE}${other}/${month ? `?month=${month}` : ''}`;
+  const filterPanel = <Filters kind={kind} posts={posts ?? []} filters={filters} update={update} />;
+
+  return (
+    <>
+      <header class="bar">
+        <div class="wrap">
+          <a class="mark" href={`${BASE}hiring/`}>
+            hacker<span>jobs</span>
+          </a>
+          <nav class="tabs" aria-label="Board">
+            {(['hiring', 'seeking'] as Kind[]).map((other) => (
+              <a key={other} href={tabLink(other)} aria-current={other === kind ? 'page' : undefined}>
+                {LABELS[other]}
+                {month && index?.months[month]?.[other] !== undefined && (
+                  <span class="count">{index.months[month][other]}</span>
+                )}
+              </a>
+            ))}
+          </nav>
+          <div class="controls">
+            <label class="field">
+              <span class="label">Month</span>
+              <select class="input" value={month ?? ''} onChange={(event) => update({ month: event.currentTarget.value })}>
+                {available.map((value) => <option key={value} value={value}>{monthLabel(value)}</option>)}
+              </select>
+            </label>
+            <label class="field">
+              <span class="label">Currency</span>
+              <select class="input" value={filters.currency} onChange={(event) => update({ currency: event.currentTarget.value })}>
+                {currencies.map((code) => <option key={code} value={code}>{code}</option>)}
+              </select>
+            </label>
+          </div>
+        </div>
+      </header>
+
+      <main id="main" class="wrap">
+        <form class="search" role="search" onSubmit={(event) => event.preventDefault()}>
+          <label class="field">
+            <span class="label">Search</span>
+            <input class="input" type="search" value={filters.q}
+              placeholder={hiring ? 'Roles, companies, technologies' : 'Roles, technologies, interests'}
+              onInput={(event) => update({ q: event.currentTarget.value })} />
+          </label>
+          <label class="field">
+            <span class="label">Location</span>
+            <input class="input" type="text" value={filters.location} placeholder="City, country or region"
+              onInput={(event) => update({ location: event.currentTarget.value })} />
+          </label>
+        </form>
+
+        <div class="layout">
+          <aside class="sidebar" aria-label="Filters">{filterPanel}</aside>
+          <section class="results" aria-label="Results" aria-busy={!posts && !error}>
+            <div class="summary">
+              <h1>
+                {posts ? results.length.toLocaleString('en-US') : '…'} {hiring ? 'jobs' : 'candidates'}
+              </h1>
+              {month && <span class="label">{monthLabel(month)}</span>}
+              <button class="button quiet filters-button" type="button" onClick={() => drawer.current?.showModal()}>
+                Filters
+              </button>
+              {hiring && (
+                <label class="sort">
+                  <span class="label">Sort</span>
+                  <select class="input" value={filters.sort}
+                    onChange={(event) => update({ sort: event.currentTarget.value === 'pay' ? 'pay' : 'newest' })}>
+                    <option value="newest">Newest</option>
+                    <option value="pay">Highest pay</option>
+                  </select>
+                </label>
+              )}
+            </div>
+            {error && <p class="status" role="alert">{error}</p>}
+            {!error && !posts && <p class="status">Loading…</p>}
+            {posts && !results.length && <p class="status">No posts match these filters.</p>}
+            {index &&
+              results.slice(0, limit).map((post) =>
+                hiring ? (
+                  <JobCard key={post.id} post={post as HiringPost} currency={filters.currency} rates={index.rates} onHistory={setHistory} />
+                ) : (
+                  <CandidateCard key={post.id} post={post as SeekingPost} currency={filters.currency} rates={index.rates} onHistory={setHistory} />
+                ),
+              )}
+            {results.length > limit && (
+              <button class="button quiet more" type="button" onClick={() => setLimit(limit + PAGE_SIZE)}>
+                Load more ({(results.length - limit).toLocaleString('en-US')} left)
+              </button>
+            )}
+          </section>
+        </div>
+      </main>
+
+      <dialog ref={drawer} class="drawer" aria-labelledby="filters-title">
+        <div class="dialog-head">
+          <h2 id="filters-title">Filters</h2>
+          <button class="close" type="button" aria-label="Close" onClick={() => drawer.current?.close()}>
+            <CloseIcon />
+          </button>
+        </div>
+        <div class="dialog-body">{filterPanel}</div>
+      </dialog>
+
+      {index && (
+        <HistoryDialog post={history} loadMonth={loadHistory} currency={filters.currency} rates={index.rates}
+          onClose={() => setHistory(null)} />
+      )}
+    </>
+  );
+}

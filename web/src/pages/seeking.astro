@@ -1,0 +1,11 @@
+---
+import { Board } from '../components/Board';
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title="Who wants to be hired · hackerjobs"
+  description="Candidates from Hacker News' monthly Who wants to be hired threads, searchable by role, location and technology."
+>
+  <Board client:load kind="seeking" />
+</Base>
