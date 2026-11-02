@@ -99,7 +99,7 @@ cd web && bun run dev      # http://localhost:4321/hackerjobs/
 Settings live in [`hackerjobs.toml`](hackerjobs.toml):
 
 | Setting | Meaning |
-|---|---|
+| --- | --- |
 | `since` | First month to ingest (`YYYY-MM`) |
 | `parse.models` | Models to parse with, as `provider:model`, e.g. `anthropic:claude-haiku-5-5` or `lmstudio:qwen/qwen3.8-27b` |
 | `publish.models` | Whose extractions go on the site, in order of preference: each post uses the first model that has parsed it |
@@ -110,7 +110,7 @@ Settings live in [`hackerjobs.toml`](hackerjobs.toml):
 ### Commands
 
 | Command | What it does |
-|---|---|
+| --- | --- |
 | `hackerjobs ingest` | Fetch threads and posts from Hacker News |
 | `hackerjobs fx` | Fetch the latest exchange rates |
 | `hackerjobs parse` | Extract fields from posts not yet parsed at the current prompt version |
