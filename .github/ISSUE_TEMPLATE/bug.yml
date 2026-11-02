@@ -1,0 +1,16 @@
+name: Site bug
+description: Something on the site doesn't work or looks broken.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what you saw. A link or screenshot helps.
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: e.g. Safari 26 on iPhone, Firefox 150 on Windows

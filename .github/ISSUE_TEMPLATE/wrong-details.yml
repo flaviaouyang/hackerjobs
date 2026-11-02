@@ -1,0 +1,18 @@
+name: Wrong details on a post
+description: A card shows something the post doesn't say, or misses something it does.
+labels: [data]
+body:
+  - type: input
+    id: link
+    attributes:
+      label: Link to the post
+      description: The "Original post on HN" link.
+    validations:
+      required: true
+  - type: textarea
+    id: wrong
+    attributes:
+      label: What's wrong
+      description: Which detail (pay, location, role, company, ...) and what the post actually says.
+    validations:
+      required: true

@@ -1,0 +1,24 @@
+name: Remove my post
+description: Take one of your posts off the board.
+title: "Remove post "
+labels: [removal]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Deleting or editing your post on Hacker News updates the board at its next daily sync.
+        Use this form to have it removed sooner. Please open it from the HN account that wrote the
+        post, or say in the post itself that you asked for removal, so we know it's yours.
+  - type: input
+    id: link
+    attributes:
+      label: Link to the post
+      description: The "Original post on HN" link, e.g. https://news.ycombinator.com/item?id=12345678
+    validations:
+      required: true
+  - type: input
+    id: username
+    attributes:
+      label: Your HN username
+    validations:
+      required: true
