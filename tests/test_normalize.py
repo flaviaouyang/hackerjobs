@@ -75,6 +75,14 @@ def test_candidate_arrangements_fall_back_to_the_single_reading() -> None:
     assert normalize("", stated).arrangements == ("remote", "onsite")
 
 
+def test_consulting_needs_evidence_in_the_post() -> None:
+    posting = dataclasses.replace(make_posting(), industries=("Consulting & agencies", "AI/ML"))
+    product = "We build AI to replace traditional ad agencies."
+    assert normalize(product, posting).industries == ("AI/ML",)
+    consultancy = "We are a small software consultancy working with startups."
+    assert normalize(consultancy, posting).industries == ("Consulting & agencies", "AI/ML")
+
+
 def test_candidate_fields() -> None:
     text = (
         "Location: Lille\nEmail: jo@example.com\nGitHub: https://github.com/jo\n"

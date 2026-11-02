@@ -6,6 +6,7 @@ from typing import Any
 from hackerjobs.models import (
     CompanyStage,
     EmploymentType,
+    Industry,
     Kind,
     Pay,
     Remote,
@@ -163,6 +164,43 @@ STAGE_EVIDENCE: dict[CompanyStage, re.Pattern[str]] = {
     "subsidiary": re.compile(r"\bpart of [A-Z]|(?i:\bsubsidiary\b|\ba division of\b|\bowned by\b)"),
     "nonprofit": re.compile(r"\bnon[\s-]?profit\b|\bnot[\s-]for[\s-]profit\b", re.I),
 }
+# Words a post must contain for an industry the model often over-assigns. Products that sell to
+# agencies, or replace them, are not agencies: those mentions are removed before checking.
+INDUSTRY_EVIDENCE: dict[Industry, re.Pattern[str]] = {
+    "Consulting & agencies": re.compile(
+        r"consult|\badvisory\b|\bagenc(?:y|ies)\b|\bstudio\b|\b(?:dev|development|software) "
+        r"(?:shop|house)\b|\bstaff(?:ing|\s+aug)|\boutsourc|\bnearshor|\bcontracting\b|\bclients?\b"
+        r"|\b(?:professional|managed|it|engineering|technology) services?\b"
+        r"|\bservices? (?:firm|company|provider|partner)\b"
+        r"|\bcustom (?:\w+ )?(?:software|development)\b|\bengagements?\b",
+        re.I,
+    ),
+}
+_SELLS_TO_AGENCIES = re.compile(
+    r"\breplac\w* (?:\w+ ){0,2}agencies|\b(?:for|to|helps?) (?:\w+ ){0,3}agencies", re.I
+)
+
+
+def has_industry_evidence(industry: Industry, text: str) -> bool:
+    """Tell whether a post supports an industry; industries without a check always pass.
+
+    Args:
+        industry: Industry assigned to the post
+        text: Plain text of the post
+
+    Returns:
+        False only for checked industries whose evidence words the post lacks
+
+    Example:
+        >>> has_industry_evidence("Consulting & agencies", "We are a software consultancy.")
+        True
+        >>> has_industry_evidence("Consulting & agencies", "AI to replace traditional ad agencies.")
+        False
+    """
+    pattern = INDUSTRY_EVIDENCE.get(industry)
+    return pattern is None or bool(pattern.search(_SELLS_TO_AGENCIES.sub("", text)))
+
+
 # Checked in order: the first match wins, so "Data Engineer" is Data & ML, "Product Designer" is
 # Design and "Product Engineer" is Engineering.
 _ROLE_CATEGORIES: tuple[tuple[RoleCategory, re.Pattern[str]], ...] = (

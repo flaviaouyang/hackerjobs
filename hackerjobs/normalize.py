@@ -7,7 +7,7 @@ from typing import Any
 
 from hackerjobs.identity import name_key
 from hackerjobs.models import CompanyStage, Money, Pay, Posting, Role, SeekingPosting
-from hackerjobs.rules import STAGE_EVIDENCE, deobfuscate, role_category
+from hackerjobs.rules import STAGE_EVIDENCE, deobfuscate, has_industry_evidence, role_category
 from hackerjobs.technologies import canonical_technologies
 
 _CURRENCY_SYMBOLS = {
@@ -231,6 +231,11 @@ def _stage(stage: CompanyStage | None, post: _Post) -> CompanyStage | None:
     return stage if stage is not None and STAGE_EVIDENCE[stage].search(post.text) else None
 
 
+def _industries(values: tuple[str, ...], post: _Post) -> tuple[str, ...]:
+    """Drop repeats and industries the post gives no evidence for."""
+    return _unique(industry for industry in values if has_industry_evidence(industry, post.text))
+
+
 def _technologies(values: tuple[str, ...], post: _Post) -> tuple[str, ...]:
     return _unique(name for item in values for name in canonical_technologies(item))
 
@@ -311,7 +316,7 @@ _CLEANERS: dict[str, Callable[[Any, _Post], Any]] = {
     "investors": _texts,
     **dict.fromkeys(("languages", "benefits"), _tidy_texts),
     "interests": _phrases,
-    "industries": _deduplicated,
+    "industries": _industries,
     "role_categories": _deduplicated,
     "company_stage": _stage,
     **dict.fromkeys(("funding", "valuation"), _money),
