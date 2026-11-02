@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -137,13 +137,17 @@ def connect(path: Path) -> sqlite3.Connection:
     return conn
 
 
-def save_thread(conn: sqlite3.Connection, thread: Thread, posts: list[Post]) -> None:
-    """Insert a thread and upsert its posts in one transaction.
+def save_thread(
+    conn: sqlite3.Connection, thread: Thread, posts: list[Post], removed: Iterable[int] = ()
+) -> None:
+    """Insert a thread, upsert its posts and delete the ones HN removed, in one transaction.
 
     Args:
         conn: Database connection
         thread: Thread to save
-        posts: Posts of the thread
+        posts: Live posts of the thread
+        removed: Ids of posts HN reports as dead (flagged) or deleted; their extractions and
+            reviews go with them
     """
     with conn:
         conn.execute(
@@ -157,6 +161,7 @@ def save_thread(conn: sqlite3.Connection, thread: Thread, posts: list[Post]) -> 
                 for post in posts
             ),
         )
+        conn.executemany("DELETE FROM posts WHERE id = ?", ((post_id,) for post_id in removed))
 
 
 def posts_to_parse(

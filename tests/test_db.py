@@ -57,3 +57,10 @@ def test_rates_round_trip(conn: sqlite3.Connection) -> None:
     db.save_rates(conn, Rates("2026-10-30", {"USD": 1.396, "CAD": 1.0}))
     db.save_rates(conn, Rates("2026-10-31", {"EUR": 1.5, "CAD": 1.0}))
     assert db.load_rates(conn) == Rates("2026-10-31", {"EUR": 1.5, "CAD": 1.0})
+
+
+def test_posts_removed_on_hn_are_deleted_with_their_extractions(conn: sqlite3.Connection) -> None:
+    db.save_extraction(conn, pending(1), "m", "v1", make_posting())
+    db.save_thread(conn, THREAD, [make_post(2)], removed=[1])
+    assert conn.execute("SELECT id FROM posts").fetchall() == [(2,)]
+    assert conn.execute("SELECT COUNT(*) FROM extractions").fetchone() == (0,)

@@ -20,9 +20,16 @@ EVAL_CACHE_DIR = Path("eval/.cache")
 
 def _ingest(args: argparse.Namespace, config: Config, conn: sqlite3.Connection) -> None:
     """Fetch threads since a month from Hacker News and store their posts."""
-    for thread, posts in asyncio.run(hn.fetch(args.since or config.since)):
-        db.save_thread(conn, thread, posts)
-        logging.info("%s %s: %d posts", thread.month, thread.kind, len(posts))
+    for fetched in asyncio.run(hn.fetch(args.since or config.since)):
+        db.save_thread(conn, fetched.thread, fetched.posts, fetched.removed)
+        thread = fetched.thread
+        logging.info(
+            "%s %s: %d posts, %d removed on HN",
+            thread.month,
+            thread.kind,
+            len(fetched.posts),
+            len(fetched.removed),
+        )
 
 
 def _update_rates(args: argparse.Namespace, config: Config, conn: sqlite3.Connection) -> None:
