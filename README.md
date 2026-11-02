@@ -92,6 +92,13 @@ bun run build                   # static site in web/dist/
 Changing a prompt or the output schema changes that thread kind's prompt version, so the next
 `parse` re-parses only that kind. Run `hackerjobs eval` before and after to compare.
 
+## Analytics
+
+Builds with `PUBLIC_GOATCOUNTER_CODE` set (the deployed site) load [GoatCounter](https://www.goatcounter.com):
+no cookies, no IP addresses stored. It counts page views by path only, without the query string
+that holds filters and searches, and totals of clicks on Apply, Email and Original post links.
+Builds without the variable have no analytics.
+
 ## License
 
 [MIT](LICENSE). Posts belong to their authors on Hacker News; the board links to every original.

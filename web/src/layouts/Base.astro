@@ -10,6 +10,8 @@ interface Props {
 }
 
 const { title, description } = Astro.props;
+// Analytics is on only for builds with a GoatCounter site code, e.g. the deployed site.
+const goatcounter = import.meta.env.PUBLIC_GOATCOUNTER_CODE;
 ---
 
 <!doctype html>
@@ -28,6 +30,22 @@ const { title, description } = Astro.props;
         if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
       } catch {}
     </script>
+    {
+      goatcounter && (
+        <>
+          <script is:inline>
+            // Count the page without its query string, which holds filters and search text.
+            window.goatcounter = { path: () => location.pathname };
+          </script>
+          <script
+            is:inline
+            async
+            data-goatcounter={`https://${goatcounter}.goatcounter.com/count`}
+            src="https://gc.zgo.at/count.js"
+          />
+        </>
+      )
+    }
   </head>
   <body>
     <a class="skip" href="#main">Skip to results</a>

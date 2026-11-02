@@ -113,11 +113,11 @@ export function JobCard({ post, currency, rates, onHistory }: Props) {
       )}
       <div class="actions">
         {apply && (
-          <Out class="button" href={apply.href}>
+          <Out class="button" href={apply.href} count="apply">
             {apply.label} <span class="arrow" aria-hidden="true">↗</span>
           </Out>
         )}
-        <Out href={hnItem(post.id)}>
+        <Out href={hnItem(post.id)} count="hn-post">
           Original post on HN <Ext />
         </Out>
         <span>

@@ -67,7 +67,7 @@ export function CandidateCard({ post, currency, rates, onHistory }: Props) {
       <Details items={facts} class="facts" />
       <div class="actions">
         {fields.contact && isEmail(fields.contact) && (
-          <Out class="button" href={`mailto:${fields.contact}`}>
+          <Out class="button" href={`mailto:${fields.contact}`} count="email-candidate">
             Email <span class="arrow" aria-hidden="true">↗</span>
           </Out>
         )}
@@ -76,7 +76,7 @@ export function CandidateCard({ post, currency, rates, onHistory }: Props) {
             {label} <Ext />
           </Out>
         ))}
-        <Out href={hnItem(post.id)}>
+        <Out href={hnItem(post.id)} count="hn-post">
           Original post on HN <Ext />
         </Out>
         <button class="button quiet expand" type="button" aria-expanded={open} onClick={() => setOpen(!open)}>

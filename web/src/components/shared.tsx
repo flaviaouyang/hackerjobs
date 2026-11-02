@@ -1,4 +1,5 @@
 import type { ComponentChildren } from 'preact';
+import { type CountedClick, countClick } from '../lib/analytics';
 import { monthLabel } from '../lib/format';
 import { displayPay } from '../lib/money';
 import type { Pay, Post, Rates } from '../lib/types';
@@ -66,10 +67,16 @@ export function Ext() {
   return <span class="ext" aria-hidden="true">↗</span>;
 }
 
-/** A link that opens in a new tab. */
-export function Out({ href, class: className, children }: { href: string; class?: string; children: ComponentChildren }) {
+/** A link that opens in a new tab, optionally counted as a click event. */
+export function Out({ href, class: className, count, children }: {
+  href: string;
+  class?: string;
+  count?: CountedClick;
+  children: ComponentChildren;
+}) {
   return (
-    <a class={className} target="_blank" rel="noopener noreferrer" href={href}>
+    <a class={className} target="_blank" rel="noopener noreferrer" href={href}
+      onClick={count && (() => countClick(count))}>
       {children}
     </a>
   );

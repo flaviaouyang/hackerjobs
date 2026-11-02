@@ -17,11 +17,11 @@ function Row({ post }: { post: Post }) {
       </div>
       <div class="links">
         {apply && (
-          <Out href={apply.href}>
+          <Out href={apply.href} count={hiring ? 'apply' : 'email-candidate'}>
             {hiring ? 'Apply' : apply.label} <Ext />
           </Out>
         )}
-        <Out href={hnItem(post.id)}>
+        <Out href={hnItem(post.id)} count="hn-post">
           HN post <Ext />
         </Out>
       </div>
