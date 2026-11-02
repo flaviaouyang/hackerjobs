@@ -9,7 +9,6 @@ industry, in one place, with a link back to each original post.
 
 [![CI](https://github.com/flaviaouyang/hackerjobs/actions/workflows/ci.yml/badge.svg)](https://github.com/flaviaouyang/hackerjobs/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-1b4ef5.svg)](LICENSE)
-[![Site](https://img.shields.io/badge/site-flaviaouyang.github.io%2Fhackerjobs-1b4ef5.svg)](https://flaviaouyang.github.io/hackerjobs/)
 
 [**Open the board →**](https://flaviaouyang.github.io/hackerjobs/)
 
