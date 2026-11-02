@@ -68,17 +68,19 @@ export function Filters({ kind, posts, filters, update }: Props) {
 
   return (
     <div class="filters">
-      <fieldset class="group">
-        <legend class="label">Kind of work</legend>
-        <div class="chips">
-          {counts.work.map(([name, count]) => (
-            <Chip key={name} pressed={filters.work.includes(name)} count={count}
-              onClick={() => update({ work: toggle(filters.work, name) })}>
-              {name}
-            </Chip>
-          ))}
-        </div>
-      </fieldset>
+      {counts.work.length > 0 && (
+        <fieldset class="group">
+          <legend class="label">Kind of work</legend>
+          <div class="chips">
+            {counts.work.map(([name, count]) => (
+              <Chip key={name} pressed={filters.work.includes(name)} count={count}
+                onClick={() => update({ work: toggle(filters.work, name) })}>
+                {name}
+              </Chip>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       <fieldset class="group">
         <legend class="label">{hiring ? 'Arrangement' : 'Wants to work'}</legend>
