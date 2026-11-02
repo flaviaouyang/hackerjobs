@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { DEFAULT_FILTERS, applyFilters, countValues, parseFilters, serializeFilters } from './filters';
+import { DEFAULT_FILTERS, applyFilters, countValues, isBrief, parseFilters, serializeFilters } from './filters';
 import type { HiringFields, HiringPost, Rates } from './types';
 
 const RATES: Rates = { date: '2026-10-30', cad_per_unit: { CAD: 1, USD: 1.396, GBP: 1.8699 } };
@@ -43,6 +43,14 @@ describe('filters', () => {
   test('hides reposts and closed posts by default', () => {
     const ids = applyFilters(POSTS, 'hiring', DEFAULT_FILTERS, RATES, null).map((post) => post.id);
     expect(ids).toEqual([2, 1]);
+  });
+
+  test('lists brief posts after detailed ones', () => {
+    const posts = [...POSTS, job(5, {}), job(6, { company_description: 'We make rockets.' })];
+    expect(isBrief(posts[4])).toBe(true);
+    expect(isBrief(posts[5])).toBe(false);
+    const ids = applyFilters(posts, 'hiring', DEFAULT_FILTERS, RATES, null).map((post) => post.id);
+    expect(ids).toEqual([6, 2, 1, 5]);
   });
 
   test('matches any chosen kind of work', () => {

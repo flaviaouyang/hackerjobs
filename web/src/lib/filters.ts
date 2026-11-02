@@ -159,8 +159,15 @@ function matchesSeeking(post: SeekingPost, filters: Filters): boolean {
   return !filters.employment.length || fields.employment_types.some((type) => filters.employment.includes(type));
 }
 
+/** Whether a post says little beyond who posted it: no roles, pay, description, technologies or interests. */
+export function isBrief(post: Post): boolean {
+  const fields = post.fields;
+  if (fields.roles.length || fields.technologies.length) return false;
+  return 'company' in fields ? !fields.pay && !fields.company_description : !fields.interests.length;
+}
+
 /**
- * Apply every filter and sort the posts.
+ * Apply every filter and sort the posts; brief posts come after the detailed ones.
  *
  * @param hits Ids matching the search box, or null when it is empty
  */
@@ -178,11 +185,13 @@ export function applyFilters(
         ? matchesHiring(post as HiringPost, filters, rates)
         : matchesSeeking(post as SeekingPost, filters)),
   );
-  if (filters.sort === 'pay' && kind === 'hiring') {
-    const top = (post: Post) => yearlyMax(post.fields.pay, filters.currency, rates) ?? -1;
-    return kept.sort((left, right) => top(right) - top(left));
-  }
-  return kept.sort((left, right) => right.posted_at - left.posted_at);
+  const brief = new Map(kept.map((post) => [post.id, isBrief(post) ? 1 : 0]));
+  const top = (post: Post) => yearlyMax(post.fields.pay, filters.currency, rates) ?? -1;
+  const order =
+    filters.sort === 'pay' && kind === 'hiring'
+      ? (left: Post, right: Post) => top(right) - top(left)
+      : (left: Post, right: Post) => right.posted_at - left.posted_at;
+  return kept.sort((left, right) => (brief.get(left.id) ?? 0) - (brief.get(right.id) ?? 0) || order(left, right));
 }
 
 /** How many posts mention each value, most common first. */
