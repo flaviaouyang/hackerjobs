@@ -62,14 +62,34 @@ def _anthropic_schema(adapter: TypeAdapter) -> dict[str, Any]:
     return _plain_strings(_schema(adapter))
 
 
-def _empty_strings_to_none(node: Any) -> Any:
+def _nullable_string_fields(node: Any) -> frozenset[str]:
+    """Names of the properties a JSON schema declares as nullable strings."""
+    if isinstance(node, list):
+        return frozenset().union(*map(_nullable_string_fields, node))
+    if not isinstance(node, dict):
+        return frozenset()
+    names = {
+        name
+        for name, schema in node.get("properties", {}).items()
+        if _plain_strings(schema) != schema and schema.get("anyOf")
+    }
+    return frozenset(names).union(*map(_nullable_string_fields, node.values()))
+
+
+@cache
+def _optional_text_fields(adapter: TypeAdapter) -> frozenset[str]:
+    return _nullable_string_fields(_schema(adapter))
+
+
+def _empty_strings_to_none(node: Any, names: frozenset[str]) -> Any:
+    """Turn "" back into None, but only in fields that were nullable (a role's title is not)."""
     if isinstance(node, dict):
         return {
-            key: None if value == "" else _empty_strings_to_none(value)
+            key: None if value == "" and key in names else _empty_strings_to_none(value, names)
             for key, value in node.items()
         }
     if isinstance(node, list):
-        return [_empty_strings_to_none(item) for item in node]
+        return [_empty_strings_to_none(item, names) for item in node]
     return node
 
 
@@ -152,7 +172,8 @@ class Anthropic:
         if response.stop_reason != "end_turn":
             raise ExtractionError(f"{self.model} stopped with {response.stop_reason!r}")
         text = next(block.text for block in response.content if block.type == "text")
-        return adapter.validate_python(_empty_strings_to_none(json.loads(text)))
+        data = _empty_strings_to_none(json.loads(text), _optional_text_fields(adapter))
+        return adapter.validate_python(data)
 
 
 @asynccontextmanager

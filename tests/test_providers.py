@@ -84,10 +84,13 @@ def test_anthropic_requests_structured_output_without_thinking() -> None:
 
 def test_anthropic_sends_optional_text_as_plain_strings() -> None:
     data = ADAPTER.dump_python(make_posting(), mode="json") | {"company_description": ""}
+    data["roles"] = [{"title": "", "pay": None, "locations": [], "apply_url": ""}]
     messages = FakeMessages("end_turn", json.dumps(data))
     provider = providers.Anthropic(SimpleNamespace(messages=messages), "m")
     result = asyncio.run(provider.complete(ADAPTER, "system", "user"))
     assert result.company_description is None
+    # A role's title is required, so "" stays "" (clean-up drops the role); its link is optional.
+    assert (result.roles[0].title, result.roles[0].apply_url) == ("", None)
     assert result.contact == "jobs@acme.example"
     properties = messages.request["output_config"]["format"]["schema"]["properties"]
     assert properties["company_description"]["type"] == "string"
