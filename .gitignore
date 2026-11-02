@@ -1,0 +1,18 @@
+# Design docs, plans and action items
+dev/
+
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Local database
+data/
+
+# Frontend
+node_modules/
+web/dist/
+web/.astro/
+web/public/data/
+eval/.cache/
