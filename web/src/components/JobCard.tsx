@@ -34,7 +34,7 @@ export function JobCard({ post, currency, rates, onHistory }: Props) {
     fields.min_experience_years ? `${fields.min_experience_years}+ years` : null,
   ].filter(Boolean);
   const details: Detail[] = [
-    ['Website', fields.company_website && <a href={withScheme(fields.company_website)}>{fields.company_website}</a>],
+    ['Website', fields.company_website && <a target="_blank" rel="noopener noreferrer" href={withScheme(fields.company_website)}>{fields.company_website}</a>],
     ['Funding', [money(fields.funding), money(fields.valuation) && `${money(fields.valuation)} valuation`].filter(Boolean).join(' · ')],
     ['Investors', fields.investors.join(', ')],
     ['Team', fields.team_size],
@@ -53,7 +53,7 @@ export function JobCard({ post, currency, rates, onHistory }: Props) {
     <article class="card">
       <div>
         <div class="card-top">
-          <h2>{fields.company ?? post.author}</h2>
+          <h2>{fields.company ?? <span class="unnamed">Company not named</span>}</h2>
           {fields.applications_closed && <span class="flag closed">Applications closed</span>}
           {post.new && <span class="flag new">New company</span>}
           {repost && <span class="flag">Repost of {repost}</span>}
@@ -67,7 +67,7 @@ export function JobCard({ post, currency, rates, onHistory }: Props) {
               const pay = role.pay && displayPay(role.pay, currency, rates);
               return (
                 <li key={role.title}>
-                  {role.apply_url ? <a href={withScheme(role.apply_url)}>{role.title}</a> : role.title}
+                  {role.apply_url ? <a target="_blank" rel="noopener noreferrer" href={withScheme(role.apply_url)}>{role.title}</a> : role.title}
                   {pay && <span class="role-pay">{pay.main}</span>}
                 </li>
               );
@@ -84,13 +84,13 @@ export function JobCard({ post, currency, rates, onHistory }: Props) {
       )}
       <div class="actions">
         {apply && (
-          <a class="button" href={apply.href}>
+          <a class="button" target="_blank" rel="noopener noreferrer" href={apply.href}>
             {apply.label} <span class="arrow" aria-hidden="true">↗</span>
           </a>
         )}
-        <a href={hnItem(post.id)}>Original post on HN</a>
+        <a target="_blank" rel="noopener noreferrer" href={hnItem(post.id)}>Original post on HN</a>
         <span>
-          by <a href={hnUser(post.author)}>{post.author}</a>
+          by <a target="_blank" rel="noopener noreferrer" href={hnUser(post.author)}>{post.author}</a>
         </span>
         <button class="button quiet expand" type="button" aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? 'Hide full post' : 'Show full post'}

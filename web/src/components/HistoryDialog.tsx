@@ -49,7 +49,7 @@ export function HistoryDialog({ post, loadMonth, currency, rates, onClose }: Pro
   }, [post, loadMonth]);
 
   if (!post) return null;
-  const name = 'company' in post.fields ? (post.fields.company ?? post.author) : post.author;
+  const name = 'company' in post.fields ? (post.fields.company ?? 'Company not named') : post.author;
   return (
     <dialog ref={dialog} aria-labelledby="history-title" onClose={onClose}>
       <div class="dialog-head">
@@ -66,7 +66,7 @@ export function HistoryDialog({ post, loadMonth, currency, rates, onClose }: Pro
             <li key={entry.id} aria-current={entry.id === post.id ? 'true' : undefined}>
               <span class="when">{entry.month ? monthLabel(entry.month) : 'This post'}</span>
               <span>{entry.post ? summary(entry.post, currency, rates) : 'Loading…'}</span>
-              <a href={hnItem(entry.id)}>Original post on HN</a>
+              <a target="_blank" rel="noopener noreferrer" href={hnItem(entry.id)}>Original post on HN</a>
             </li>
           ))}
         </ol>

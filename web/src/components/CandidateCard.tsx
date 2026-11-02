@@ -41,7 +41,7 @@ export function CandidateCard({ post, currency, rates, onHistory }: Props) {
       <div>
         <div class="card-top">
           <h2>
-            <a href={hnUser(post.author)}>{post.author}</a>
+            <a target="_blank" rel="noopener noreferrer" href={hnUser(post.author)}>{post.author}</a>
           </h2>
           {post.new && <span class="flag new">First post</span>}
           {repost && <span class="flag">Repost of {repost}</span>}
@@ -60,12 +60,14 @@ export function CandidateCard({ post, currency, rates, onHistory }: Props) {
       <span />
       <div class="actions">
         {fields.contact && isEmail(fields.contact) && (
-          <a class="button" href={`mailto:${fields.contact}`}>
+          <a class="button" target="_blank" rel="noopener noreferrer" href={`mailto:${fields.contact}`}>
             Email <span class="arrow" aria-hidden="true">↗</span>
           </a>
         )}
-        {links.map(([label, url]) => <a key={label} href={withScheme(url)}>{label}</a>)}
-        <a href={hnItem(post.id)}>Original post on HN</a>
+        {links.map(([label, url]) => (
+          <a key={label} target="_blank" rel="noopener noreferrer" href={withScheme(url)}>{label}</a>
+        ))}
+        <a target="_blank" rel="noopener noreferrer" href={hnItem(post.id)}>Original post on HN</a>
         <button class="button quiet expand" type="button" aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? 'Hide full post' : 'Show full post'}
         </button>
