@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
+from hackerjobs.identity import name_key
 from hackerjobs.models import CompanyStage, Money, Pay, Posting, Role
 from hackerjobs.rules import STAGE_EVIDENCE, deobfuscate
 from hackerjobs.technologies import canonical_technologies
@@ -114,6 +115,12 @@ def _text(value: str | None, post: _Post) -> str | None:
     coverage = sum(word in post.words for word in words) / len(words) if words else 0.0
     required = 1.0 if len(words) <= SHORT_TEXT_WORDS else MIN_WORD_COVERAGE
     return value if coverage >= required else None
+
+
+def _company(value: str | None, post: _Post) -> str | None:
+    """A copied company name; generic stand-ins such as "Confidential" or "Stealth" are no name."""
+    name = _text(value, post)
+    return name if name and name_key(name) else None
 
 
 def _texts(values: tuple[str, ...], post: _Post) -> tuple[str, ...]:
@@ -281,7 +288,7 @@ def _same(value: Any, post: _Post) -> Any:
 _CLEANERS: dict[str, Callable[[Any, _Post], Any]] = {
     **dict.fromkeys(
         (
-            "company", "company_description", "team_size",
+            "company_description", "team_size",
             "work_authorization", "security_clearance", "timezone", "hours", "education",
             "equity_details", "interview_process", "application_instructions", "availability",
         ),
@@ -297,6 +304,7 @@ _CLEANERS: dict[str, Callable[[Any, _Post], Any]] = {
     "linkedin": lambda value, post: _link(value, post, "linkedin.com"),
     "github": lambda value, post: _link(value, post, "github.com"),
     "contact": _url,
+    "company": _company,
     "employment_types": _deduplicated,
     "locations": _locations,
     "pay": _pay,

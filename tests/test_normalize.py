@@ -105,3 +105,8 @@ def test_candidate_interests_are_tidied_phrases() -> None:
         "Game development",
         "Developer tools",
     )
+
+
+def test_generic_company_names_are_no_name() -> None:
+    posting = dataclasses.replace(make_posting("Confidential"))
+    assert normalize("Confidential | Senior Engineer | Khobar", posting).company is None
