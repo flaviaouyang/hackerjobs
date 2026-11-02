@@ -45,11 +45,6 @@ export function someOf(items: string[], limit = 3, separator = ', '): string {
     : items.join(separator);
 }
 
-/** Up to three locations; semicolons keep "City, Country" entries apart. */
-export function someLocations(locations: string[]): string {
-  return someOf(locations, 3, '; ');
-}
-
 /** The month of the earlier post this one repeats, from its history. */
 export function repostMonth(post: Post): string | null {
   const original = post.history.find((entry) => entry.id === post.repost_of);

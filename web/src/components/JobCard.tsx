@@ -1,8 +1,8 @@
 import { useState } from 'preact/hooks';
-import { applyLink, arrangement, dayLabel, hnItem, hnUser, repostMonth, someLocations, withScheme } from '../lib/format';
+import { applyLink, arrangement, dayLabel, hnItem, hnUser, repostMonth, withScheme } from '../lib/format';
 import { displayPay, formatRange } from '../lib/money';
 import type { HiringPost, Money, Rates } from '../lib/types';
-import { Details, type Detail, FullPost, HistoryFlag, PayBlock, Tech } from './shared';
+import { Details, type Detail, Ext, FullPost, HistoryBadge, Out, PayBlock, Tech } from './shared';
 
 interface Props {
   post: HiringPost;
@@ -15,26 +15,38 @@ const STAGES: Record<string, string> = {
   'pre-seed': 'Pre-seed', seed: 'Seed', 'series-a': 'Series A', 'series-b': 'Series B', 'series-c': 'Series C',
   'series-d+': 'Series D+', public: 'Public', bootstrapped: 'Bootstrapped', subsidiary: 'Subsidiary', nonprofit: 'Nonprofit',
 };
+// Longer role lists show this many until expanded; one hidden role is not worth a button.
+const ROLES_SHOWN = 3;
 
 function money(value: Money | null): string | null {
   return value ? formatRange(value.amount, value.amount, value.currency ?? 'USD') : null;
 }
 
+const capitalize = (value: string) => value[0].toUpperCase() + value.slice(1);
+
 export function JobCard({ post, currency, rates, onHistory }: Props) {
   const [open, setOpen] = useState(false);
+  const [allRoles, setAllRoles] = useState(false);
   const fields = post.fields;
   const apply = applyLink(fields);
   const repost = post.repost_of !== null ? repostMonth(post) : null;
   const about = [...fields.industries, fields.company_stage ? STAGES[fields.company_stage] : null].filter(Boolean);
-  const facts = [
-    [someLocations(fields.locations), arrangement(fields.remote)].filter(Boolean).join(' · '),
-    fields.employment_types.map((type) => type[0].toUpperCase() + type.slice(1)).join(', '),
-    fields.equity ? (fields.equity_details ?? 'Equity') : null,
-    fields.visa_sponsorship === true ? 'Visa sponsorship' : fields.visa_sponsorship === false ? 'No visa sponsorship' : null,
+  const how = [
+    arrangement(fields.remote),
+    ...fields.employment_types.map(capitalize),
     fields.min_experience_years ? `${fields.min_experience_years}+ years` : null,
+    fields.visa_sponsorship === true ? 'Visa sponsorship' : fields.visa_sponsorship === false ? 'No visa sponsorship' : null,
+    fields.equity ? (fields.equity_details ? `Equity ${fields.equity_details}` : 'Equity') : null,
   ].filter(Boolean);
+  const facts: Detail[] = [
+    ['Where', fields.locations.join(' · ')],
+    ['How', how.join(' · ')],
+    ['Stack', fields.technologies.length > 0 && <Tech names={fields.technologies} />],
+  ];
+  const collapsible = fields.roles.length > ROLES_SHOWN + 1;
+  const roles = collapsible && !allRoles ? fields.roles.slice(0, ROLES_SHOWN) : fields.roles;
   const details: Detail[] = [
-    ['Website', fields.company_website && <a target="_blank" rel="noopener noreferrer" href={withScheme(fields.company_website)}>{fields.company_website}</a>],
+    ['Website', fields.company_website && <Out href={withScheme(fields.company_website)}>{fields.company_website}</Out>],
     ['Funding', [money(fields.funding), money(fields.valuation) && `${money(fields.valuation)} valuation`].filter(Boolean).join(' · ')],
     ['Investors', fields.investors.join(', ')],
     ['Team', fields.team_size],
@@ -51,46 +63,65 @@ export function JobCard({ post, currency, rates, onHistory }: Props) {
   ];
   return (
     <article class="card">
-      <div>
-        <div class="card-top">
-          <h2>{fields.company ?? <span class="unnamed">Company not named</span>}</h2>
-          {fields.applications_closed && <span class="flag closed">Applications closed</span>}
-          {post.new && <span class="flag new">New company</span>}
-          {repost && <span class="flag">Repost of {repost}</span>}
-          <HistoryFlag post={post} onOpen={() => onHistory(post)} />
-          {about.length > 0 && <span class="flag">{about.join(' · ')}</span>}
-          <span class="flag">{dayLabel(post.posted_at)}</span>
+      <div class="card-head">
+        <h2>{fields.company ?? <span class="unnamed">Company not named</span>}</h2>
+        {fields.pay ? <PayBlock pay={fields.pay} currency={currency} rates={rates} /> : <span />}
+        <div class="meta">
+          {fields.applications_closed && <span class="badge closed">Applications closed</span>}
+          {post.new && <span class="badge new">New company</span>}
+          {repost && <span class="badge repost">Repost of {repost}</span>}
+          <HistoryBadge post={post} onOpen={() => onHistory(post)} />
+          {about.length > 0 && <span class="tags">{about.join(' · ')}</span>}
+          <time dateTime={new Date(post.posted_at * 1000).toISOString()}>{dayLabel(post.posted_at)}</time>
         </div>
-        {fields.roles.length > 0 && (
+      </div>
+      {fields.company_description && <p class="desc">{fields.company_description}</p>}
+      {fields.roles.length > 0 && (
+        <div>
+          <p class="label section-label">
+            {fields.roles.length} {fields.roles.length === 1 ? 'role' : 'roles'}
+          </p>
           <ul class="roles">
-            {fields.roles.map((role) => {
+            {roles.map((role) => {
               const pay = role.pay && displayPay(role.pay, currency, rates);
               return (
                 <li key={role.title}>
-                  {role.apply_url ? <a target="_blank" rel="noopener noreferrer" href={withScheme(role.apply_url)}>{role.title}</a> : role.title}
+                  {role.apply_url ? (
+                    <Out href={withScheme(role.apply_url)}>
+                      {role.title} <Ext />
+                    </Out>
+                  ) : (
+                    <span>{role.title}</span>
+                  )}
                   {pay && <span class="role-pay">{pay.main}</span>}
                 </li>
               );
             })}
           </ul>
-        )}
-        {fields.company_description && <p class="desc">{fields.company_description}</p>}
-        {facts.length > 0 && <p class="facts">{facts.map((fact) => <span key={fact}>{fact}</span>)}</p>}
-        <Tech names={fields.technologies} />
-      </div>
-      {fields.pay ? <PayBlock pay={fields.pay} currency={currency} rates={rates} /> : <span />}
+          {collapsible && (
+            <button class="text-button more-roles" type="button" aria-expanded={allRoles} onClick={() => setAllRoles(!allRoles)}>
+              {allRoles ? 'Show fewer roles' : `Show all ${fields.roles.length} roles`}
+            </button>
+          )}
+        </div>
+      )}
+      <Details items={facts} class="facts" />
       {fields.application_instructions && (
-        <p class="how"><strong>How to apply:</strong> {fields.application_instructions}</p>
+        <p class="how">
+          <strong>How to apply:</strong> {fields.application_instructions}
+        </p>
       )}
       <div class="actions">
         {apply && (
-          <a class="button" target="_blank" rel="noopener noreferrer" href={apply.href}>
+          <Out class="button" href={apply.href}>
             {apply.label} <span class="arrow" aria-hidden="true">↗</span>
-          </a>
+          </Out>
         )}
-        <a target="_blank" rel="noopener noreferrer" href={hnItem(post.id)}>Original post on HN</a>
+        <Out href={hnItem(post.id)}>
+          Original post on HN <Ext />
+        </Out>
         <span>
-          by <a target="_blank" rel="noopener noreferrer" href={hnUser(post.author)}>{post.author}</a>
+          by <Out href={hnUser(post.author)}>{post.author}</Out>
         </span>
         <button class="button quiet expand" type="button" aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? 'Hide full post' : 'Show full post'}

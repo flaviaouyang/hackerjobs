@@ -1,6 +1,6 @@
 /*
-  Design tokens: direction D, "drafting" (dev/mockups/d-drafting.html).
-  Borrowed from the portfolio's Draft Paper; tuned for reading long lists.
+  Design tokens: direction D, "drafting", with palette 1 (electric blue and lilac) for light and
+  neutral charcoal for dark (dev/mockups/e-cards-v3.html).
   Contrast ratios are WCAG 2.x against --card unless noted.
 */
 
@@ -8,19 +8,27 @@
   color-scheme: light;
 
   /* Color */
-  --ground: #f7f6f2;
+  --ground: #fbfbff;
   --card: #ffffff;
-  --text: #1a1c24; /* 16.4:1 */
-  --soft: #4e5468; /* 7.6:1, secondary text */
-  --label: #5a64b0; /* 5.4:1, mono labels */
-  --accent: #2234a8; /* drafting blue, 9.9:1: links, active states, buttons */
-  --accent-wash: #eef0f9;
+  --text: #16172b; /* 17.6:1 */
+  --soft: #4b4f6b; /* 8.0:1, secondary text */
+  --label: #3a5bd9; /* 5.7:1, mono labels */
+  --accent: #1b4ef5; /* 6.1:1: links, active states, buttons */
+  --accent-wash: #eef3ff;
   --on-accent: #ffffff;
-  --line: #d9dcea; /* hairlines, decorative */
-  --line-strong: #b9bed6; /* input borders */
-  --good: #1f6b45; /* 6.4:1, "new" flags */
-  --notice: #8a4b08; /* 6.2:1, "closed" flags */
-  --wash: #fbf8ec; /* application instructions */
+  --line: #dfe5fb; /* hairlines, decorative */
+  --line-strong: #5996ff; /* input borders, underlines */
+  --good: #16172b; /* "new" badges, 12.7:1 on --good-wash */
+  --good-wash: #f4ceff;
+  --info: #16172b; /* history badges, on --info-wash */
+  --info-wash: #e3ecff;
+  --muted-wash: #f1f2f8; /* repost badges */
+  --notice: #8a4b08; /* "closed" badges, 6.1:1 on --notice-wash */
+  --notice-wash: #fbf1e3;
+  --wash: #fbefff; /* application instructions */
+  --bar: #eceffa; /* header, a little darker than the page; labels 5.0:1 */
+  --bar-line: #cdd6f5;
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%233a5bd9' stroke-width='1.5'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
 
   /* Type */
   --font-sans: 'Geist Variable', system-ui, -apple-system, sans-serif;
@@ -28,8 +36,7 @@
   --text-label: 0.6875rem; /* 11px mono caps */
   --text-sm: 0.875rem;
   --text-base: 1rem;
-  --text-role: 1rem;
-  --text-name: 1.1875rem;
+  --text-name: 1.3125rem;
   --text-title: 1.25rem;
   --leading: 1.6;
   --tracking-label: 0.04em;
@@ -42,6 +49,7 @@
   --space-4: 1rem;
   --space-5: 1.25rem;
   --space-6: 1.5rem;
+  --space-7: 1.75rem;
   --space-8: 2rem;
   --space-12: 3rem;
 
@@ -53,22 +61,55 @@
   --radius-pill: 999px;
 }
 
-/* Blueprint: the portfolio's dark paper, lifted slightly for long reading. */
+/* Charcoal: used when the system is dark unless the visitor chose light, or when they chose dark.
+   Text 14:1, secondary 7.9:1, accent 8.2:1, badges 8.8:1 or more. Keep both blocks in step. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     color-scheme: dark;
-    --ground: #0f1a3a;
-    --card: #142247;
-    --text: #eef1fb; /* 13.6:1 */
-    --soft: #b8c3e3; /* 8.4:1 */
-    --label: #9fb0dc; /* 6.6:1 */
-    --accent: #c9d4ff; /* 10.6:1 */
-    --accent-wash: #1c2d5c;
-    --on-accent: #0f1a3a;
-    --line: #2a3d72;
-    --line-strong: #3d5596;
+    --ground: #12151c;
+    --card: #181c25;
+    --text: #e6e9f0;
+    --soft: #a9b1c2;
+    --label: #9ba6e0;
+    --accent: #8ab4ff;
+    --accent-wash: #1e2638;
+    --on-accent: #12151c;
+    --line: #2a3040;
+    --line-strong: #3d4659;
     --good: #8fe0b5;
+    --good-wash: #183326;
+    --info: #b9cdff;
+    --info-wash: #1e2638;
+    --muted-wash: #222838;
     --notice: #f2c27b;
-    --wash: #1a2a55;
+    --notice-wash: #33270f;
+    --wash: #232a3a;
+    --bar: #1c2332;
+    --bar-line: #3d4659;
+    --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%239ba6e0' stroke-width='1.5'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
   }
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --ground: #12151c;
+  --card: #181c25;
+  --text: #e6e9f0;
+  --soft: #a9b1c2;
+  --label: #9ba6e0;
+  --accent: #8ab4ff;
+  --accent-wash: #1e2638;
+  --on-accent: #12151c;
+  --line: #2a3040;
+  --line-strong: #3d4659;
+  --good: #8fe0b5;
+  --good-wash: #183326;
+  --info: #b9cdff;
+  --info-wash: #1e2638;
+  --muted-wash: #222838;
+  --notice: #f2c27b;
+  --notice-wash: #33270f;
+  --wash: #232a3a;
+  --bar: #1c2332;
+  --bar-line: #3d4659;
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%239ba6e0' stroke-width='1.5'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
 }

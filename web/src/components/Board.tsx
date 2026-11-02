@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { applyFilters, DEFAULT_FILTERS, type Filters as FilterState, parseFilters, serializeFilters } from '../lib/filters';
+import { applyFilters, DEFAULT_FILTERS, isBrief, type Filters as FilterState, parseFilters, serializeFilters } from '../lib/filters';
 import { monthLabel } from '../lib/format';
 import { pageWindow } from '../lib/pages';
 import { buildIndex, searchIds } from '../lib/search';
 import type { HiringPost, Index, Kind, Post, SeekingPost } from '../lib/types';
+import { BriefList } from './BriefList';
 import { CandidateCard } from './CandidateCard';
 import { Filters } from './Filters';
 import { HistoryDialog } from './HistoryDialog';
 import { JobCard } from './JobCard';
+import { ThemeSwitch } from './ThemeSwitch';
 
 const BASE = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const PAGE_SIZE = 20;
@@ -62,6 +64,22 @@ function CloseIcon() {
   );
 }
 
+/** Whether the header should step aside: true while scrolling down past it, false on any scroll up. */
+function useScrollingDown(header: { current: HTMLElement | null }): boolean {
+  const [down, setDown] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setDown(y > last && y > (header.current?.offsetHeight ?? 0));
+      last = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [header]);
+  return down;
+}
+
 /** The whole board for one thread kind: header controls, search, filters and results. */
 export function Board({ kind }: { kind: Kind }) {
   const [index, setIndex] = useState<Index | null>(null);
@@ -73,6 +91,8 @@ export function Board({ kind }: { kind: Kind }) {
   const [history, setHistory] = useState<Post | null>(null);
   const drawer = useRef<HTMLDialogElement>(null);
   const hiring = kind === 'hiring';
+  const bar = useRef<HTMLElement>(null);
+  const hideBar = useScrollingDown(bar);
 
   useEffect(() => {
     setFilters(parseFilters(window.location.search));
@@ -111,6 +131,10 @@ export function Board({ kind }: { kind: Kind }) {
   }, []);
   const pageCount = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
   const page = Math.min(filters.page, pageCount);
+  const shown = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const detailed = shown.filter((post) => !isBrief(post));
+  const briefShown = shown.filter(isBrief);
+  const briefTotal = useMemo(() => results.filter(isBrief).length, [results]);
   const turnPage = (next: number) => {
     update({ page: next });
     resultsTop.current?.scrollIntoView({ block: 'start' });
@@ -121,7 +145,7 @@ export function Board({ kind }: { kind: Kind }) {
 
   return (
     <>
-      <header class="bar">
+      <header class={hideBar ? 'bar hidden' : 'bar'} ref={bar}>
         <div class="wrap">
           <a class="mark" href={`${BASE}hiring/`}>
             hacker<span>jobs</span>
@@ -140,7 +164,7 @@ export function Board({ kind }: { kind: Kind }) {
             <label class="field">
               <span class="label">Month</span>
               <select class="input" value={month ?? ''} onChange={(event) => update({ month: event.currentTarget.value })}>
-                {available.map((value) => <option key={value} value={value}>{monthLabel(value)}</option>)}
+                {available.map((value) => <option key={value} value={value}>{`${monthLabel(value, 'short')} ${value.slice(0, 4)}`}</option>)}
               </select>
             </label>
             <label class="field">
@@ -149,6 +173,7 @@ export function Board({ kind }: { kind: Kind }) {
                 {currencies.map((code) => <option key={code} value={code}>{code}</option>)}
               </select>
             </label>
+            <ThemeSwitch />
           </div>
         </div>
       </header>
@@ -194,13 +219,14 @@ export function Board({ kind }: { kind: Kind }) {
             {!error && !posts && <p class="status">Loading…</p>}
             {posts && !results.length && <p class="status">No posts match these filters.</p>}
             {index &&
-              results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((post) =>
+              detailed.map((post) =>
                 hiring ? (
                   <JobCard key={post.id} post={post as HiringPost} currency={filters.currency} rates={index.rates} onHistory={setHistory} />
                 ) : (
                   <CandidateCard key={post.id} post={post as SeekingPost} currency={filters.currency} rates={index.rates} onHistory={setHistory} />
                 ),
               )}
+            {briefShown.length > 0 && <BriefList posts={briefShown} total={briefTotal} />}
             {pageCount > 1 && <Pagination page={page} count={pageCount} onPage={turnPage} />}
           </section>
         </div>
