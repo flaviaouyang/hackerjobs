@@ -68,6 +68,13 @@ def test_unread_role_titles_take_the_model_reading_or_other() -> None:
     assert normalize("", hiring).role_categories == ("Other",)
 
 
+def test_candidate_arrangements_fall_back_to_the_single_reading() -> None:
+    posting = dataclasses.replace(EMPTY_POSTINGS[Kind.SEEKING], remote="hybrid")
+    assert normalize("", posting).arrangements == ("hybrid",)
+    stated = dataclasses.replace(posting, arrangements=("remote", "onsite"))
+    assert normalize("", stated).arrangements == ("remote", "onsite")
+
+
 def test_candidate_fields() -> None:
     text = (
         "Location: Lille\nEmail: jo@example.com\nGitHub: https://github.com/jo\n"

@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from hackerjobs.identity import name_key
-from hackerjobs.models import CompanyStage, Money, Pay, Posting, Role
+from hackerjobs.models import CompanyStage, Money, Pay, Posting, Role, SeekingPosting
 from hackerjobs.rules import STAGE_EVIDENCE, deobfuscate, role_category
 from hackerjobs.technologies import canonical_technologies
 
@@ -321,6 +321,7 @@ _CLEANERS: dict[str, Callable[[Any, _Post], Any]] = {
     "contact": _url,
     "company": _company,
     "employment_types": _deduplicated,
+    "arrangements": _deduplicated,
     "locations": _locations,
     "pay": _pay,
     "technologies": _technologies,
@@ -354,4 +355,7 @@ def normalize[P: Posting](text: str, posting: P) -> P:
         for field in dataclasses.fields(posting)
     }
     cleaned = dataclasses.replace(posting, **values)
-    return dataclasses.replace(cleaned, role_categories=_role_categories(cleaned))
+    cleaned = dataclasses.replace(cleaned, role_categories=_role_categories(cleaned))
+    if isinstance(cleaned, SeekingPosting) and not cleaned.arrangements and cleaned.remote:
+        cleaned = dataclasses.replace(cleaned, arrangements=(cleaned.remote,))
+    return cleaned

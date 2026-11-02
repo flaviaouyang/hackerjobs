@@ -328,6 +328,52 @@ def _seeker_remote(value: str) -> Remote | None:
     return "hybrid" if "hybrid" in answer else None
 
 
+# Answers on a candidate's "Remote:" line that mean yes.
+_REMOTE_YES = (
+    "y",
+    "sure",
+    "absolutely",
+    "definitely",
+    "enthusiastic",
+    "of course",
+    "ok",
+    "100%",
+    "preferabl",
+    "preferred",
+    "remote",
+    "fully",
+    "open",
+)
+_ANY_OFFICE = re.compile(rf"{_ONSITE.pattern}|\boffice\b", re.I)
+
+
+def _seeker_arrangements(value: str) -> tuple[Remote, ...]:
+    """Every arrangement a candidate's "Remote:" answer is open to.
+
+    Example:
+        >>> _seeker_arrangements("Yes, or on-site in the Bay Area")
+        ('remote', 'onsite')
+        >>> _seeker_arrangements("No, hybrid preferred")
+        ('hybrid',)
+        >>> _seeker_arrangements("Hybrid and onsite also work")
+        ('remote', 'hybrid', 'onsite')
+        >>> _seeker_arrangements("No")
+        ('onsite',)
+    """
+    answer = value.strip().casefold()
+    refused = answer.startswith("no")
+    found: list[Remote] = []
+    # "Hybrid and onsite also work" answers a question about remote: remote works too.
+    also = re.search(r"\balso\b", answer)
+    if not refused and (answer.startswith(_REMOTE_YES) or _REMOTE.search(answer) or also):
+        found.append("remote")
+    if _HYBRID.search(answer):
+        found.append("hybrid")
+    if _ANY_OFFICE.search(answer) or (refused and not found):
+        found.append("onsite")
+    return tuple(found)
+
+
 def _split_technologies(value: str) -> list[str]:
     items = (item.strip(" .-*:") for item in _TECH_SEPARATORS.split(_TECH_FILLER.sub("", value)))
     return [item for item in items if item and len(item.split()) <= 4]
@@ -400,6 +446,8 @@ def _seeker_fields(text: str) -> dict[str, Any]:
         fields["timezone"] = timezone.group()
     if "remote" in template and (remote := _seeker_remote(template["remote"])):
         fields["remote"] = remote
+    if "remote" in template and (arrangements := _seeker_arrangements(template["remote"])):
+        fields["arrangements"] = arrangements
     if "relocate" in template and (relocate := _yes_no(template["relocate"])) is not None:
         fields["willing_to_relocate"] = relocate
     # Free-form skill lists mix in non-technologies, so rules keep only known names.

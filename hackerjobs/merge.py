@@ -39,6 +39,8 @@ FIELD_SOURCES: dict[Kind, dict[str, Source]] = {
         "locations": "rules_then_llm",
         "remote": "rules_then_llm",
         "willing_to_relocate": "rules_then_llm",
+        # Without a template answer, normalize falls back to the single `remote` reading.
+        "arrangements": "rules",
         "timezone": "rules_then_llm",
         "experience_years": "llm_then_rules",
         "contact": "rules_then_llm",

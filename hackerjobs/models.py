@@ -158,6 +158,9 @@ class SeekingPosting:
     linkedin: str | None
     github: str | None
     resume_url: str | None
+    # Every arrangement they are open to ("Remote: Yes, or on-site" is remote and onsite), read
+    # from the template by rules. Defaults to empty so extractions stored before it still load.
+    arrangements: tuple[Remote, ...] = ()
 
 
 Posting = HiringPosting | SeekingPosting

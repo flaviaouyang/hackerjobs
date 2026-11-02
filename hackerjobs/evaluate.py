@@ -18,7 +18,14 @@ RAW = "llm_raw"
 CONFIGURED = "configured"
 VARIANTS = (RAW, *SOURCES, CONFIGURED)
 SET_FIELDS = frozenset(
-    {"technologies", "employment_types", "languages", "industries", "role_categories"}
+    {
+        "technologies",
+        "employment_types",
+        "languages",
+        "industries",
+        "role_categories",
+        "arrangements",
+    }
 )
 FUZZY_SET_FIELDS = frozenset({"roles", "locations", "investors", "benefits", "interests"})
 TEXT_FIELDS = frozenset({

@@ -51,6 +51,7 @@ def test_seeker_template() -> None:
         "locations": ("Limerick, Ireland",),
         "timezone": "UTC",
         "remote": "remote",
+        "arrangements": ("remote",),
         "willing_to_relocate": False,
         "technologies": ("PostgreSQL", "C", "C++", "Kubernetes"),
         "experience_years": 7,
@@ -66,6 +67,25 @@ def test_seeker_template_on_one_line() -> None:
     assert fields["locations"] == ("Nepal",)
     assert fields["remote"] == "remote"
     assert fields["willing_to_relocate"] is True
+
+
+@pytest.mark.parametrize(
+    ("answer", "arrangements"),
+    [
+        ("Yep", ("remote",)),
+        ("Yes, also open to hybrid or on-site in the Phoenix area", ("remote", "hybrid", "onsite")),
+        ("Open to remote opportunities and in-office alike", ("remote", "onsite")),
+        ("Hybrid and Onsite also work", ("remote", "hybrid", "onsite")),
+        ("No, hybrid preferred", ("hybrid",)),
+        ("No", ("onsite",)),
+        ("Flexible", None),
+    ],
+)
+def test_candidate_arrangements(answer: str, arrangements: tuple[str, ...] | None) -> None:
+    fields = extract_rules(
+        Kind.SEEKING, f"Location: Lille\nRemote: {answer}\nEmail: jo@example.com"
+    )
+    assert fields.get("arrangements") == arrangements
 
 
 def test_hiring_header() -> None:
