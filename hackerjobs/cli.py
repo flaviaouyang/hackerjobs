@@ -148,7 +148,7 @@ def build_parser() -> argparse.ArgumentParser:
         handler=_update_rates
     )
 
-    parse_parser = commands.add_parser("parse", help="extract fields from posts with LM Studio")
+    parse_parser = commands.add_parser("parse", help="extract fields from posts with a model")
     parse_parser.add_argument(
         "--model",
         action="append",
