@@ -12,7 +12,7 @@ from hackerjobs.models import POSTING_ADAPTERS, Kind
 ADAPTER = POSTING_ADAPTERS[Kind.HIRING]
 
 
-def lmstudio_handler(content: str):
+def lmstudio_handler(content: str, field: str = "content"):
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith("/models"):
             return httpx.Response(200, json={"data": [{"id": "m"}]})
@@ -20,7 +20,8 @@ def lmstudio_handler(content: str):
         if "response_format" in body:
             schema = body["response_format"]["json_schema"]["schema"]
             assert schema["additionalProperties"] is False
-        return httpx.Response(200, json={"choices": [{"message": {"content": content}}]})
+        message = {"content": "", field: content}
+        return httpx.Response(200, json={"choices": [{"message": message}]})
 
     return handler
 
@@ -32,6 +33,12 @@ async def complete_once(model_ref: str = "lmstudio:m") -> object:
 
 def test_lmstudio_returns_validated_output(mock_http) -> None:
     mock_http(lmstudio_handler(ADAPTER.dump_json(make_posting()).decode()))
+    assert asyncio.run(complete_once()) == make_posting()
+
+
+def test_lmstudio_reads_answers_filed_as_reasoning(mock_http) -> None:
+    answer = ADAPTER.dump_json(make_posting()).decode()
+    mock_http(lmstudio_handler(answer, field="reasoning_content"))
     assert asyncio.run(complete_once()) == make_posting()
 
 

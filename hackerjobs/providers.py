@@ -137,7 +137,12 @@ class LMStudio:
             },
         )
         response.raise_for_status()
-        return adapter.validate_json(response.json()["choices"][0]["message"]["content"])
+        message = response.json()["choices"][0]["message"]
+        # Models with a thinking chat template (Qwen, GLM) can have LM Studio file the whole
+        # schema-constrained answer under reasoning_content and leave content empty.
+        return adapter.validate_json(
+            message.get("content") or message.get("reasoning_content") or ""
+        )
 
 
 @dataclass(frozen=True, slots=True)
