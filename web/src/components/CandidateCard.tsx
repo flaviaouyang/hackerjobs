@@ -51,16 +51,17 @@ export function CandidateCard({ post, currency, rates, onHistory }: Props) {
   return (
     <article class="card">
       <div class="card-head">
-        <h2>
-          <Out href={hnUser(post.author)}>{post.author}</Out>
-        </h2>
-        {fields.pay ? <PayBlock pay={fields.pay} currency={currency} rates={rates} /> : <span />}
-        <div class="meta">
-          {post.new && <span class="badge new">First post</span>}
-          {repost && <span class="badge repost">Repost of {repost}</span>}
-          <HistoryBadge post={post} verb="looking" onOpen={() => onHistory(post)} />
-          <time dateTime={new Date(post.posted_at * 1000).toISOString()}>{dayLabel(post.posted_at)}</time>
+        {/* Candidates keep their flags beside the name, as small labels rather than badges. */}
+        <div class="card-top">
+          <h2>
+            <Out href={hnUser(post.author)}>{post.author}</Out>
+          </h2>
+          {post.new && <span class="flag">First post</span>}
+          {repost && <span class="flag">Repost of {repost}</span>}
+          <HistoryBadge post={post} verb="looking" class="flag" onOpen={() => onHistory(post)} />
+          <time class="flag" dateTime={new Date(post.posted_at * 1000).toISOString()}>{dayLabel(post.posted_at)}</time>
         </div>
+        {fields.pay ? <PayBlock pay={fields.pay} currency={currency} rates={rates} /> : <span />}
       </div>
       {fields.roles.length > 0 && <p class="wants">{fields.roles.join(' · ')}</p>}
       <Details items={facts} class="facts" />

@@ -44,12 +44,17 @@ export function PayBlock({ pay, currency, rates }: { pay: Pay; currency: string;
 }
 
 /** "Also posted in Oct" or "Also posted in 6 months", opening the poster's history. */
-export function HistoryBadge({ post, onOpen, verb = 'posted' }: { post: Post; onOpen: () => void; verb?: string }) {
+export function HistoryBadge({ post, onOpen, verb = 'posted', class: className = 'badge history' }: {
+  post: Post;
+  onOpen: () => void;
+  verb?: string;
+  class?: string;
+}) {
   const others = [...new Set(post.history.map((entry) => entry.month))].sort();
   if (!others.length) return null;
   const when = others.length === 1 ? monthLabel(others[0], 'short') : `${others.length} months`;
   return (
-    <button class="badge history" type="button" onClick={onOpen}
+    <button class={className} type="button" onClick={onOpen}
       title={others.map((month) => monthLabel(month)).join(', ')}>
       Also {verb} in {when}
     </button>
