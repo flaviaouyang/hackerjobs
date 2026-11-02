@@ -1,7 +1,7 @@
 import { useState } from 'preact/hooks';
-import { arrangement, dayLabel, hnItem, hnUser, isEmail, repostMonth, withScheme } from '../lib/format';
+import { arrangement, dayLabel, hnItem, hnUser, repostMonth, withScheme } from '../lib/format';
 import type { Rates, SeekingPost } from '../lib/types';
-import { Details, type Detail, Ext, FullPost, HistoryBadge, Out, PayBlock, Tech } from './shared';
+import { Details, type Detail, Ext, FullPost, HistoryBadge, MailLink, Out, PayBlock, Tech } from './shared';
 
 interface Props {
   post: SeekingPost;
@@ -66,10 +66,10 @@ export function CandidateCard({ post, currency, rates, onHistory }: Props) {
       {fields.roles.length > 0 && <p class="wants">{fields.roles.join(' · ')}</p>}
       <Details items={facts} class="facts" />
       <div class="actions">
-        {fields.contact && isEmail(fields.contact) && (
-          <Out class="button" href={`mailto:${fields.contact}`} count="email-candidate">
+        {fields.contact_email && (
+          <MailLink class="button" scrambled={fields.contact_email} count="email-candidate">
             Email <span class="arrow" aria-hidden="true">↗</span>
-          </Out>
+          </MailLink>
         )}
         {links.map(([label, url]) => (
           <Out key={label} href={withScheme(url)}>

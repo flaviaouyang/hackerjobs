@@ -17,19 +17,25 @@ export function withScheme(url: string): string {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
 
-export function isEmail(value: string): boolean {
-  return /^[^\s@/]+@[^\s@/]+\.[^\s@/]+$/.test(value);
+/**
+ * Undo the export's scrambling of an email address (Base64 of the reversed address). Addresses
+ * are only unscrambled when someone reaches for the link, so harvesters reading the data get none.
+ */
+export function unscramble(scrambled: string): string {
+  const bytes = Uint8Array.from(atob(scrambled), (char) => char.charCodeAt(0));
+  return [...new TextDecoder().decode(bytes)].reverse().join('');
 }
 
-export interface Link {
-  href: string;
-  label: string;
-}
+/** A web link (`href`) or a scrambled email address (`scrambled`). */
+export type Link = { label: string } & ({ href: string; scrambled?: never } | { scrambled: string; href?: never });
 
-/** Where to apply: the contact (email or URL), else a role's own link, else the company site. */
+/** Where to apply: the post's contact (email or URL), else a role's own, else the company site. */
 export function applyLink(fields: HiringFields): Link | null {
-  if (fields.contact && isEmail(fields.contact)) return { href: `mailto:${fields.contact}`, label: 'Email to apply' };
-  const url = fields.contact ?? fields.roles.find((role) => role.apply_url)?.apply_url ?? fields.company_website;
+  if (fields.contact_email) return { scrambled: fields.contact_email, label: 'Email to apply' };
+  if (fields.contact) return { href: withScheme(fields.contact), label: 'Apply' };
+  const role = fields.roles.find((item) => item.apply_email || item.apply_url);
+  if (role?.apply_email) return { scrambled: role.apply_email, label: 'Email to apply' };
+  const url = role?.apply_url ?? fields.company_website;
   return url ? { href: withScheme(url), label: 'Apply' } : null;
 }
 

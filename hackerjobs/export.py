@@ -1,4 +1,6 @@
+import base64
 import json
+import re
 import sqlite3
 from collections.abc import Sequence
 from dataclasses import asdict
@@ -11,7 +13,10 @@ from hackerjobs import db
 from hackerjobs.identity import PostSummary, identify
 from hackerjobs.merge import in_right_thread, merge
 from hackerjobs.models import POSTING_ADAPTERS, HiringPosting, Kind, Posting
-from hackerjobs.rules import role_category, seniority
+from hackerjobs.rules import EMAIL, role_category, seniority
+
+# A web address, with or without a scheme: no spaces or @, and a dotted host.
+_LINK = re.compile(r"(?:https?://)?[^\s@/]+\.[^\s@/]+(?:/\S*)?", re.IGNORECASE)
 
 
 def _write_json(path: Path, payload: object) -> None:
@@ -35,13 +40,48 @@ def _summary(post: db.PublishedPost, fields: Posting) -> PostSummary:
     )
 
 
+def scramble(email: str) -> str:
+    """Hide an email address from address harvesters; the site reverses this on demand.
+
+    Args:
+        email: Email address
+
+    Returns:
+        The address reversed and Base64-encoded
+
+    Example:
+        >>> scramble("jo@example.com")
+        'bW9jLmVscG1heGVAb2o='
+    """
+    return base64.b64encode(email[::-1].encode()).decode()
+
+
+def _move_email(data: dict[str, Any], key: str, email_key: str) -> None:
+    """Split a contact into a web link under `key` and a scrambled email under `email_key`.
+
+    Anything else ("jo @ acme.io", "(my HN username)@acme.io", "ssh apply@host") is neither a
+    link nor an address the site can use, so it is dropped; the post still shows it as written.
+    """
+    value = (data[key] or "").strip().removeprefix("mailto:")
+    is_email = EMAIL.fullmatch(value) is not None
+    is_link = bool(value) and not is_email and _LINK.fullmatch(value) is not None
+    data[key] = value if is_link else None
+    data[email_key] = scramble(value) if is_email else None
+
+
 def _fields_json(kind: Kind, fields: Posting) -> dict[str, Any]:
-    """Serialize fields, adding seniority and role categories read from job titles."""
+    """Serialize fields, adding role details read from job titles and scrambling email addresses.
+
+    Many candidates disguise their address ("jo [at] example [dot] com"); the site must not undo
+    that in plain text, so every address is published scrambled.
+    """
     data = POSTING_ADAPTERS[kind].dump_python(fields, mode="json")
+    _move_email(data, "contact", "contact_email")
     if kind is Kind.HIRING:
         for role in data["roles"]:
             role["seniority"] = seniority(role["title"])
             role["category"] = role_category(role["title"]) or "Other"
+            _move_email(role, "apply_url", "apply_email")
         titles = [role["title"] for role in data["roles"]]
     else:
         titles = data["roles"]

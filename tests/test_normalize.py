@@ -83,6 +83,24 @@ def test_consulting_needs_evidence_in_the_post() -> None:
     assert normalize(consultancy, posting).industries == ("Consulting & agencies", "AI/ML")
 
 
+def test_text_with_an_address_not_written_in_the_post_is_dropped() -> None:
+    text = "Email pascual (at) arthos (dot) inc. Or send your resume to jerry@numeralhq.com"
+    decoded = dataclasses.replace(
+        make_posting(), application_instructions="Email pascual@arthos.inc"
+    )
+    assert normalize(text, decoded).application_instructions is None
+    mistyped = dataclasses.replace(
+        make_posting(), application_instructions="Send your resume to jerry@numeral.com"
+    )
+    assert normalize(text, mistyped).application_instructions is None
+    exact = dataclasses.replace(
+        make_posting(), application_instructions="send your resume to jerry@numeralhq.com"
+    )
+    assert (
+        normalize(text, exact).application_instructions == "send your resume to jerry@numeralhq.com"
+    )
+
+
 def test_candidate_fields() -> None:
     text = (
         "Location: Lille\nEmail: jo@example.com\nGitHub: https://github.com/jo\n"

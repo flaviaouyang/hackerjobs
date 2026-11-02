@@ -22,6 +22,8 @@ export interface Role {
   pay: Pay | null;
   locations: string[];
   apply_url: string | null;
+  /** Scrambled email address to apply to this role (see `unscramble`). */
+  apply_email: string | null;
   seniority: string | null;
   category: string;
 }
@@ -59,6 +61,8 @@ export interface HiringFields {
   relocation_support: boolean | null;
   interview_process: string | null;
   contact: string | null;
+  /** Scrambled email address (see `unscramble`); `contact` then holds no link. */
+  contact_email: string | null;
   application_instructions: string | null;
   applications_closed: boolean | null;
   seniority: string[];
@@ -82,6 +86,8 @@ export interface SeekingFields {
   interests: string[];
   technologies: string[];
   contact: string | null;
+  /** Scrambled email address (see `unscramble`); `contact` then holds no link. */
+  contact_email: string | null;
   website: string | null;
   linkedin: string | null;
   github: string | null;

@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { applyLink, arrangement, dayLabel, hnItem, hnUser, repostMonth, withScheme } from '../lib/format';
 import { displayPay, formatRange } from '../lib/money';
 import type { HiringPost, Money, Rates } from '../lib/types';
-import { Details, type Detail, Ext, FullPost, HistoryBadge, Out, PayBlock, Tech } from './shared';
+import { Details, type Detail, Ext, FullPost, HistoryBadge, LinkTo, MailLink, Out, PayBlock, Tech } from './shared';
 
 interface Props {
   post: HiringPost;
@@ -86,8 +86,12 @@ export function JobCard({ post, currency, rates, onHistory }: Props) {
               const pay = role.pay && displayPay(role.pay, currency, rates);
               return (
                 <li key={role.title}>
-                  {role.apply_url ? (
-                    <Out href={withScheme(role.apply_url)}>
+                  {role.apply_email ? (
+                    <MailLink scrambled={role.apply_email} count="apply">
+                      {role.title} <Ext />
+                    </MailLink>
+                  ) : role.apply_url ? (
+                    <Out href={withScheme(role.apply_url)} count="apply">
                       {role.title} <Ext />
                     </Out>
                   ) : (
@@ -113,9 +117,9 @@ export function JobCard({ post, currency, rates, onHistory }: Props) {
       )}
       <div class="actions">
         {apply && (
-          <Out class="button" href={apply.href} count="apply">
+          <LinkTo class="button" link={apply} count="apply">
             {apply.label} <span class="arrow" aria-hidden="true">↗</span>
-          </Out>
+          </LinkTo>
         )}
         <Out href={hnItem(post.id)} count="hn-post">
           Original post on HN <Ext />

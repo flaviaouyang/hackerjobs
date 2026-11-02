@@ -1,6 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { type CountedClick, countClick } from '../lib/analytics';
-import { monthLabel } from '../lib/format';
+import { useState } from 'preact/hooks';
+import { type Link, monthLabel, unscramble } from '../lib/format';
 import { displayPay } from '../lib/money';
 import type { Pay, Post, Rates } from '../lib/types';
 
@@ -65,6 +66,46 @@ export function HistoryBadge({ post, onOpen, verb = 'posted', class: className =
 /** The arrow after links that open a new tab. */
 export function Ext() {
   return <span class="ext" aria-hidden="true">↗</span>;
+}
+
+/** A mail link whose address is unscrambled only when someone hovers, focuses or taps it. */
+export function MailLink({ scrambled, class: className, count, children }: {
+  scrambled: string;
+  class?: string;
+  count?: CountedClick;
+  children: ComponentChildren;
+}) {
+  const [href, setHref] = useState<string | null>(null);
+  const reveal = () => {
+    const mailto = `mailto:${unscramble(scrambled)}`;
+    setHref(mailto);
+    return mailto;
+  };
+  return (
+    <a class={className} href={href ?? '#email'} onPointerEnter={reveal} onFocus={reveal} onTouchStart={reveal}
+      onClick={(event) => {
+        if (count) countClick(count);
+        if (href) return;
+        // Clicked before any hover or focus, e.g. by assistive technology: open the address now.
+        event.preventDefault();
+        window.location.href = reveal();
+      }}>
+      {children}
+    </a>
+  );
+}
+
+/** A web link in a new tab, or a mail link for a scrambled address. */
+export function LinkTo({ link, class: className, count, children }: {
+  link: Link;
+  class?: string;
+  count?: CountedClick;
+  children: ComponentChildren;
+}) {
+  if (link.scrambled !== undefined) {
+    return <MailLink scrambled={link.scrambled} class={className} count={count}>{children}</MailLink>;
+  }
+  return <Out href={link.href} class={className} count={count}>{children}</Out>;
 }
 
 /** A link that opens in a new tab, optionally counted as a click event. */

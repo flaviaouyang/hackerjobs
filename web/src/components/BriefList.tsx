@@ -1,12 +1,16 @@
-import { applyLink, arrangement, hnItem, hnUser, isEmail, someOf } from '../lib/format';
+import { applyLink, arrangement, hnItem, hnUser, type Link, someOf } from '../lib/format';
 import type { Post } from '../lib/types';
-import { Ext, Out } from './shared';
+import { Ext, LinkTo, Out } from './shared';
 
 function Row({ post }: { post: Post }) {
   const fields = post.fields;
   const hiring = 'company' in fields;
   const what = [someOf(fields.locations, 3, ' · '), arrangement(fields.remote)].filter(Boolean).join(' · ');
-  const apply = hiring ? applyLink(fields) : fields.contact && isEmail(fields.contact) ? { href: `mailto:${fields.contact}`, label: 'Email' } : null;
+  const apply: Link | null = hiring
+    ? applyLink(fields)
+    : fields.contact_email
+      ? { scrambled: fields.contact_email, label: 'Email' }
+      : null;
   return (
     <li>
       <div>
@@ -17,9 +21,9 @@ function Row({ post }: { post: Post }) {
       </div>
       <div class="links">
         {apply && (
-          <Out href={apply.href} count={hiring ? 'apply' : 'email-candidate'}>
+          <LinkTo link={apply} count={hiring ? 'apply' : 'email-candidate'}>
             {hiring ? 'Apply' : apply.label} <Ext />
-          </Out>
+          </LinkTo>
         )}
         <Out href={hnItem(post.id)} count="hn-post">
           HN post <Ext />

@@ -12,7 +12,7 @@ function job(id: number, fields: Partial<HiringFields>, extra: Partial<HiringPos
     min_experience_years: null, languages: [], work_authorization: null, security_clearance: null,
     timezone: null, hours: null, education: null, equity: null, equity_details: null, benefits: [],
     visa_sponsorship: null, relocation_support: null, interview_process: null, contact: null,
-    application_instructions: null, applications_closed: null, seniority: [],
+    application_instructions: null, applications_closed: null, seniority: [], contact_email: null,
   };
   return { id, author: `user${id}`, posted_at: id, html: '', key: null, new: true, repost_of: null, history: [], fields: { ...base, ...fields }, ...extra };
 }

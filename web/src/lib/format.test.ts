@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { applyLink, dayLabel, monthLabel, someOf, withScheme } from './format';
+import { applyLink, dayLabel, monthLabel, someOf, unscramble, withScheme } from './format';
 import type { HiringFields } from './types';
 
 const fields = (overrides: Partial<HiringFields>) => ({ roles: [], contact: null, company_website: null, ...overrides }) as HiringFields;
@@ -12,10 +12,17 @@ describe('format', () => {
   });
 
   test('picks where to apply', () => {
-    expect(applyLink(fields({ contact: 'jobs@acme.com' }))).toEqual({ href: 'mailto:jobs@acme.com', label: 'Email to apply' });
+    expect(applyLink(fields({ contact_email: 'bW9jLmVscG1heGVAb2o=' }))).toEqual({ scrambled: 'bW9jLmVscG1heGVAb2o=', label: 'Email to apply' });
     expect(applyLink(fields({ contact: 'acme.com/careers' }))).toEqual({ href: 'https://acme.com/careers', label: 'Apply' });
     expect(applyLink(fields({ company_website: 'https://acme.com' }))?.href).toBe('https://acme.com');
     expect(applyLink(fields({}))).toBeNull();
+    const role = { title: 'Engineer', pay: null, locations: [], apply_url: null, apply_email: 'bW9jLmVscG1heGVAb2o=', seniority: null, category: 'Engineering' };
+    expect(applyLink(fields({ roles: [role] }))).toEqual({ scrambled: 'bW9jLmVscG1heGVAb2o=', label: 'Email to apply' });
+  });
+
+  test('unscrambles what the export scrambled', () => {
+    // Same value as the doctest of hackerjobs.export.scramble.
+    expect(unscramble('bW9jLmVscG1heGVAb2o=')).toBe('jo@example.com');
   });
 
   test('shortens long lists', () => {

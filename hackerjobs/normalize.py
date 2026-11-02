@@ -7,7 +7,13 @@ from typing import Any
 
 from hackerjobs.identity import name_key
 from hackerjobs.models import CompanyStage, Money, Pay, Posting, Role, SeekingPosting
-from hackerjobs.rules import STAGE_EVIDENCE, deobfuscate, has_industry_evidence, role_category
+from hackerjobs.rules import (
+    EMAIL,
+    STAGE_EVIDENCE,
+    deobfuscate,
+    has_industry_evidence,
+    role_category,
+)
 from hackerjobs.technologies import canonical_technologies
 
 _CURRENCY_SYMBOLS = {
@@ -106,8 +112,14 @@ def _unique[T](items: Iterable[T], key: Callable[[T], str] = str.casefold) -> tu
 
 
 def _text(value: str | None, post: _Post) -> str | None:
-    """Keep free text only if it is copied from the post."""
+    """Keep free text only if it is copied from the post.
+
+    Email addresses in it must appear exactly as the post writes them: word overlap alone would
+    let through a decoded "jo (at) example (dot) com" or a mistyped address.
+    """
     if value is None or not (value := value.strip()):
+        return None
+    if any(address.casefold() not in post.lowered for address in EMAIL.findall(value)):
         return None
     if _compact(value) in post.compact:
         return value
