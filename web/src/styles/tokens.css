@@ -1,0 +1,74 @@
+/*
+  Design tokens: direction D, "drafting" (dev/mockups/d-drafting.html).
+  Borrowed from the portfolio's Draft Paper; tuned for reading long lists.
+  Contrast ratios are WCAG 2.x against --card unless noted.
+*/
+
+:root {
+  color-scheme: light;
+
+  /* Color */
+  --ground: #f7f6f2;
+  --card: #ffffff;
+  --text: #1a1c24; /* 16.4:1 */
+  --soft: #4e5468; /* 7.6:1, secondary text */
+  --label: #5a64b0; /* 5.4:1, mono labels */
+  --accent: #2234a8; /* drafting blue, 9.9:1: links, active states, buttons */
+  --accent-wash: #eef0f9;
+  --on-accent: #ffffff;
+  --line: #d9dcea; /* hairlines, decorative */
+  --line-strong: #b9bed6; /* input borders */
+  --good: #1f6b45; /* 6.4:1, "new" flags */
+  --notice: #8a4b08; /* 6.2:1, "closed" flags */
+  --wash: #fbf8ec; /* application instructions */
+
+  /* Type */
+  --font-sans: 'Geist Variable', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', monospace;
+  --text-label: 0.6875rem; /* 11px mono caps */
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-role: 1rem;
+  --text-name: 1.1875rem;
+  --text-title: 1.25rem;
+  --leading: 1.6;
+  --tracking-label: 0.04em;
+  --tracking-title: -0.02em;
+
+  /* Space: 4px base */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* Layout */
+  --page: 75rem;
+  --gutter: 1.25rem;
+  --sidebar: 16.5rem;
+  --control: 2.75rem; /* 44px touch targets */
+  --radius-pill: 999px;
+}
+
+/* Blueprint: the portfolio's dark paper, lifted slightly for long reading. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --ground: #0f1a3a;
+    --card: #142247;
+    --text: #eef1fb; /* 13.6:1 */
+    --soft: #b8c3e3; /* 8.4:1 */
+    --label: #9fb0dc; /* 6.6:1 */
+    --accent: #c9d4ff; /* 10.6:1 */
+    --accent-wash: #1c2d5c;
+    --on-accent: #0f1a3a;
+    --line: #2a3d72;
+    --line-strong: #3d5596;
+    --good: #8fe0b5;
+    --notice: #f2c27b;
+    --wash: #1a2a55;
+  }
+}
