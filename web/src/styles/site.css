@@ -126,6 +126,7 @@ legend.label { margin-bottom: var(--space-3); padding: 0; }
 .badge.history:hover { text-decoration-color: currentColor; }
 .badge.repost { background: var(--muted-wash); color: var(--soft); }
 .badge.closed { background: var(--notice-wash); color: var(--notice); }
+.card-top h2 a { text-decoration-style: dotted; text-decoration-thickness: 2px; }
 .card-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-3); }
 .flag { font: 400 var(--text-label) / 1.35 var(--font-mono); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--label); }
 button.flag { background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 0.2em; }
