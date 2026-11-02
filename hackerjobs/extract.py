@@ -34,7 +34,9 @@ This post is a job ad from a company that is hiring.
 - company_description: the sentence(s) in the post that say what the company does, copied.
 - industries: the one or two industries from the list below that best describe what the company \
 sells or who its customers are, based on what the post says it does. Technology it merely uses \
-does not count: a company that uses AI is not AI/ML unless AI is its product.
+does not count: a company that uses AI is not AI/ML unless AI is its product. Consulting & \
+agencies is only for a company that is itself a consultancy, agency, dev shop or staffing firm, \
+not one that sells to such firms.
 - company_stage: only if the post states it: pre-seed, seed, series-a, series-b, series-c, \
 series-d+ (Series D or later), public (publicly traded), bootstrapped, subsidiary (part of another \
 company), nonprofit. "Startup" or "early-stage" alone is not a stage.
