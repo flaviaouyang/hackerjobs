@@ -38,9 +38,16 @@ export function arrangement(remote: string | null): string | null {
   return remote ? remote[0].toUpperCase() + remote.slice(1) : null;
 }
 
-/** Up to three items joined with commas, then "+N more". */
-export function someOf(items: string[], limit = 3): string {
-  return items.length > limit ? `${items.slice(0, limit).join(', ')} +${items.length - limit} more` : items.join(', ');
+/** Up to three items joined with `separator`, then "+N more". */
+export function someOf(items: string[], limit = 3, separator = ', '): string {
+  return items.length > limit
+    ? `${items.slice(0, limit).join(separator)} +${items.length - limit} more`
+    : items.join(separator);
+}
+
+/** Up to three locations; semicolons keep "City, Country" entries apart. */
+export function someLocations(locations: string[]): string {
+  return someOf(locations, 3, '; ');
 }
 
 /** The month of the earlier post this one repeats, from its history. */

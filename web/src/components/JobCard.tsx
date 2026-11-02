@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { applyLink, arrangement, dayLabel, hnItem, hnUser, repostMonth, someOf, withScheme } from '../lib/format';
+import { applyLink, arrangement, dayLabel, hnItem, hnUser, repostMonth, someLocations, withScheme } from '../lib/format';
 import { displayPay, formatRange } from '../lib/money';
 import type { HiringPost, Money, Rates } from '../lib/types';
 import { Details, type Detail, FullPost, HistoryFlag, PayBlock, Tech } from './shared';
@@ -27,7 +27,7 @@ export function JobCard({ post, currency, rates, onHistory }: Props) {
   const repost = post.repost_of !== null ? repostMonth(post) : null;
   const about = [...fields.industries, fields.company_stage ? STAGES[fields.company_stage] : null].filter(Boolean);
   const facts = [
-    [someOf(fields.locations), arrangement(fields.remote)].filter(Boolean).join(' · '),
+    [someLocations(fields.locations), arrangement(fields.remote)].filter(Boolean).join(' · '),
     fields.employment_types.map((type) => type[0].toUpperCase() + type.slice(1)).join(', '),
     fields.equity ? (fields.equity_details ?? 'Equity') : null,
     fields.visa_sponsorship === true ? 'Visa sponsorship' : fields.visa_sponsorship === false ? 'No visa sponsorship' : null,

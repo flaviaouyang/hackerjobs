@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { arrangement, dayLabel, hnItem, hnUser, isEmail, repostMonth, someOf, withScheme } from '../lib/format';
+import { arrangement, dayLabel, hnItem, hnUser, isEmail, repostMonth, someLocations, withScheme } from '../lib/format';
 import { displayPay } from '../lib/money';
 import type { Rates, SeekingPost } from '../lib/types';
 import { Details, type Detail, FullPost, HistoryFlag, Tech } from './shared';
@@ -15,7 +15,12 @@ export function CandidateCard({ post, currency, rates, onHistory }: Props) {
   const [open, setOpen] = useState(false);
   const fields = post.fields;
   const repost = post.repost_of !== null ? repostMonth(post) : null;
-  const place = [someOf(fields.locations), fields.timezone && `(${fields.timezone})`].filter(Boolean).join(' ');
+  // The candidate template's Location line often carries the timezone too; don't say it twice.
+  const zone = fields.timezone?.toLowerCase();
+  const zoneShown = zone !== undefined && fields.locations.some((location) => location.toLowerCase().includes(zone));
+  const place = [someLocations(fields.locations), !zoneShown && fields.timezone && `(${fields.timezone})`]
+    .filter(Boolean)
+    .join(' ');
   const facts = [
     place,
     [arrangement(fields.remote), fields.willing_to_relocate ? 'open to relocation' : null].filter(Boolean).join(' · '),
