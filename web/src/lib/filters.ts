@@ -8,6 +8,8 @@ export interface Filters {
   q: string;
   location: string;
   remote: Remote[];
+  /** Role categories (kinds of work). */
+  work: string[];
   tech: string[];
   hideReposts: boolean;
   currency: string;
@@ -33,6 +35,7 @@ export const DEFAULT_FILTERS: Filters = {
   q: '',
   location: '',
   remote: [],
+  work: [],
   tech: [],
   hideReposts: true,
   currency: 'USD',
@@ -67,6 +70,7 @@ export function parseFilters(search: string): Filters {
     remote: list(params.get('remote')).filter((value): value is Remote =>
       ['remote', 'hybrid', 'onsite'].includes(value),
     ),
+    work: list(params.get('work')),
     tech: list(params.get('tech')),
     hideReposts: !flag('reposts'),
     currency: params.get('cur') ?? DEFAULT_FILTERS.currency,
@@ -95,6 +99,7 @@ export function serializeFilters(filters: Filters): string {
   put('q', filters.q.trim());
   put('loc', filters.location.trim());
   put('remote', filters.remote.join(','));
+  put('work', filters.work.join(','));
   put('tech', filters.tech.join(','));
   put('reposts', filters.hideReposts ? null : '1');
   put('cur', filters.currency === DEFAULT_FILTERS.currency ? null : filters.currency);
@@ -127,6 +132,7 @@ function matchesShared(post: Post, filters: Filters, hits: Set<number> | null): 
   if (filters.remote.length && !(post.fields.remote && filters.remote.includes(post.fields.remote))) return false;
   const place = filters.location.trim().toLowerCase();
   if (place && !locations(post).some((location) => location.toLowerCase().includes(place))) return false;
+  if (filters.work.length && !post.fields.role_categories.some((category) => filters.work.includes(category))) return false;
   const techs = lower(post.fields.technologies);
   return lower(filters.tech).every((tech) => techs.includes(tech));
 }

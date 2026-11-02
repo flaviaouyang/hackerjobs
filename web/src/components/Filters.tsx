@@ -52,6 +52,7 @@ export function Filters({ kind, posts, filters, update }: Props) {
     const jobs = posts as HiringPost[];
     return {
       remote: new Map(countValues(posts, (post) => (post.fields.remote ? [post.fields.remote] : []))),
+      work: countValues(posts, (post) => post.fields.role_categories),
       tech: countValues(posts, (post) => post.fields.technologies),
       industries: hiring ? countValues(jobs, (post) => post.fields.industries) : [],
       reposts: posts.filter((post) => post.repost_of !== null).length,
@@ -67,6 +68,18 @@ export function Filters({ kind, posts, filters, update }: Props) {
 
   return (
     <div class="filters">
+      <fieldset class="group">
+        <legend class="label">Kind of work</legend>
+        <div class="chips">
+          {counts.work.map(([name, count]) => (
+            <Chip key={name} pressed={filters.work.includes(name)} count={count}
+              onClick={() => update({ work: toggle(filters.work, name) })}>
+              {name}
+            </Chip>
+          ))}
+        </div>
+      </fieldset>
+
       <fieldset class="group">
         <legend class="label">{hiring ? 'Arrangement' : 'Wants to work'}</legend>
         <div class="chips">

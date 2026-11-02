@@ -6,7 +6,7 @@ const RATES: Rates = { date: '2026-10-30', cad_per_unit: { CAD: 1, USD: 1.396, G
 
 function job(id: number, fields: Partial<HiringFields>, extra: Partial<HiringPost> = {}): HiringPost {
   const base: HiringFields = {
-    company: `Company ${id}`, company_website: null, company_description: null, industries: [],
+    post_type: 'job_ad', role_categories: [], company: `Company ${id}`, company_website: null, company_description: null, industries: [],
     company_stage: null, funding: null, valuation: null, investors: [], team_size: null, founded_year: null,
     roles: [], locations: [], remote: null, employment_types: [], pay: null, technologies: [],
     min_experience_years: null, languages: [], work_authorization: null, security_clearance: null,
@@ -19,7 +19,7 @@ function job(id: number, fields: Partial<HiringFields>, extra: Partial<HiringPos
 
 const POSTS = [
   job(1, { remote: 'remote', technologies: ['TypeScript', 'React'], pay: { min: 150_000, max: 200_000, currency: 'USD', period: 'year' } }),
-  job(2, { remote: 'onsite', locations: ['London, UK'], pay: { min: 100_000, max: 120_000, currency: 'GBP', period: 'year' } }),
+  job(2, { remote: 'onsite', locations: ['London, UK'], role_categories: ['Design', 'Product'], pay: { min: 100_000, max: 120_000, currency: 'GBP', period: 'year' } }),
   job(3, { remote: 'remote', technologies: ['typescript'], applications_closed: true }),
   job(4, { remote: 'remote' }, { repost_of: 1, new: false }),
 ];
@@ -43,6 +43,12 @@ describe('filters', () => {
   test('hides reposts and closed posts by default', () => {
     const ids = applyFilters(POSTS, 'hiring', DEFAULT_FILTERS, RATES, null).map((post) => post.id);
     expect(ids).toEqual([2, 1]);
+  });
+
+  test('matches any chosen kind of work', () => {
+    const filters = parseFilters('?work=Product,Sales%20%26%20marketing');
+    expect(filters.work).toEqual(['Product', 'Sales & marketing']);
+    expect(applyFilters(POSTS, 'hiring', filters, RATES, null).map((post) => post.id)).toEqual([2]);
   });
 
   test('matches technologies case-insensitively, all required', () => {

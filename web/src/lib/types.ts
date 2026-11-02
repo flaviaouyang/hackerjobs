@@ -3,6 +3,7 @@
 export type Kind = 'hiring' | 'seeking';
 export type Remote = 'remote' | 'hybrid' | 'onsite';
 export type PayPeriod = 'year' | 'month' | 'day' | 'hour';
+export type PostType = 'job_ad' | 'job_seeker' | 'other';
 
 export interface Pay {
   min: number;
@@ -22,9 +23,12 @@ export interface Role {
   locations: string[];
   apply_url: string | null;
   seniority: string | null;
+  category: string;
 }
 
 export interface HiringFields {
+  post_type: PostType | null;
+  role_categories: string[];
   company: string | null;
   company_website: string | null;
   company_description: string | null;
@@ -61,7 +65,9 @@ export interface HiringFields {
 }
 
 export interface SeekingFields {
+  post_type: PostType | null;
   roles: string[];
+  role_categories: string[];
   locations: string[];
   remote: Remote | null;
   willing_to_relocate: boolean | null;
