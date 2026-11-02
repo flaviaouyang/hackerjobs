@@ -32,8 +32,9 @@ This post is a job ad from a company that is hiring.
 - company: the hiring company's name.
 - company_website: the company's own website, not a job board or application link.
 - company_description: the sentence(s) in the post that say what the company does, copied.
-- industries: one or more from the list below that describe the company's product or customers, \
-based on what the post says it does.
+- industries: the one or two industries from the list below that best describe what the company \
+sells or who its customers are, based on what the post says it does. Technology it merely uses \
+does not count: a company that uses AI is not AI/ML unless AI is its product.
 - company_stage: only if the post states it: pre-seed, seed, series-a, series-b, series-c, \
 series-d+ (Series D or later), public (publicly traded), bootstrapped, subsidiary (part of another \
 company), nonprofit. "Startup" or "early-stage" alone is not a stage.
@@ -68,9 +69,10 @@ describe themselves as ("Full-Stack AI Engineer with 10 years..."). Never a sent
 - experience_years: total years of professional experience, if stated.
 - work_authorization ("US citizen", "F-1 OPT", "EU citizen"), availability ("available \
 immediately", "from December 2026"), education (as written).
-- interests: what they say they want to work on next, as short phrases: industries ("game \
-development") or kinds of work ("distributed systems", "developer tools"). Not hobbies, skills \
-or past work.
+- interests: only what they explicitly say they want to work on next ("looking for", "interested \
+in", "would love to", "best fit"), as short phrases naming an industry ("games industry" -> \
+"game development") or a kind of work ("distributed systems", "developer tools"). Empty if they \
+only describe their background; never their skills, past work or hobbies.
 - contact: their email address. website, linkedin, github, resume_url: their links."""
 
 INDUSTRY_LIST = f"Industries: {', '.join(INDUSTRIES)}."
