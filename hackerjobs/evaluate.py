@@ -240,7 +240,8 @@ def score(posts: list[BenchmarkPost], extractions: Mapping[int, Posting]) -> Eva
 
 
 def _cache_path(cache_dir: Path, model_ref: str) -> Path:
-    return cache_dir / f"{re.sub(r'[^\w.-]', '_', model_ref)}-{extract.PROMPT_VERSION}.json"
+    versions = "-".join(extract.PROMPT_VERSIONS[kind] for kind in Kind)
+    return cache_dir / f"{re.sub(r'[^\w.-]', '_', model_ref)}-{versions}.json"
 
 
 async def extract_benchmark(

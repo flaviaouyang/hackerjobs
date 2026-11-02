@@ -16,3 +16,4 @@ web/dist/
 web/.astro/
 web/public/data/
 eval/.cache/
+.DS_Store

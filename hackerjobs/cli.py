@@ -74,7 +74,10 @@ def _evaluate(args: argparse.Namespace, config: Config, conn: sqlite3.Connection
         extractions = asyncio.run(evaluate.extract_benchmark(posts, config, model, EVAL_CACHE_DIR))
         report = evaluate.score(posts, extractions)
         parsed = f"{len(extractions)}/{len(posts)} parsed"
-        print(f"## {model} (prompt {extract.PROMPT_VERSION}, {parsed})\n")
+        versions = ", ".join(
+            f"{kind} {version}" for kind, version in extract.PROMPT_VERSIONS.items()
+        )
+        print(f"## {model} (prompts {versions}; {parsed})\n")
         print(evaluate.format_scores(report))
         if args.report:
             args.report.write_text(

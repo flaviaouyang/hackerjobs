@@ -16,10 +16,10 @@ def published(conn: sqlite3.Connection) -> dict[int, str | None]:
 
 def test_posts_to_parse_is_per_model_and_prompt_version(conn: sqlite3.Connection) -> None:
     db.save_extraction(conn, pending(1), "m", "v1", make_posting())
-    assert [post.id for post in db.posts_to_parse(conn, "m", "v1")] == [2]
-    assert [post.id for post in db.posts_to_parse(conn, "m", "v2")] == [1, 2]
-    assert [post.id for post in db.posts_to_parse(conn, "other", "v1")] == [1, 2]
-    assert db.posts_to_parse(conn, "m", "v1")[0].kind is Kind.HIRING
+    assert [post.id for post in db.posts_to_parse(conn, "m", Kind.HIRING, "v1")] == [2]
+    assert [post.id for post in db.posts_to_parse(conn, "m", Kind.HIRING, "v2")] == [1, 2]
+    assert [post.id for post in db.posts_to_parse(conn, "other", Kind.HIRING, "v1")] == [1, 2]
+    assert db.posts_to_parse(conn, "m", Kind.SEEKING, "v1") == []
 
 
 def test_editing_a_post_drops_its_extractions_and_reviews(conn: sqlite3.Connection) -> None:

@@ -82,9 +82,11 @@ SYSTEM_PROMPTS = {
     Kind.SEEKING: f"{PRINCIPLES}\n\n{SEEKING_RULES}",
 }
 
-PROMPT_VERSION = providers.prompt_version(
-    [POSTING_ADAPTERS[Kind.HIRING], POSTING_ADAPTERS[Kind.SEEKING]], *SYSTEM_PROMPTS.values()
-)
+# One version per post kind, so changing the hiring prompt does not re-parse candidates.
+PROMPT_VERSIONS = {
+    kind: providers.prompt_version([POSTING_ADAPTERS[kind]], prompt)
+    for kind, prompt in SYSTEM_PROMPTS.items()
+}
 
 
 async def extract(provider: providers.Provider, kind: Kind, text: str):
@@ -102,7 +104,7 @@ async def extract(provider: providers.Provider, kind: Kind, text: str):
 
 
 async def parse_posts(conn: sqlite3.Connection, config: Config, model_ref: str) -> int:
-    """Extract fields with a model for every post it has not parsed at the current prompt version.
+    """Extract fields with a model for every post it has not parsed at its kind's prompt version.
 
     Args:
         conn: Database connection
@@ -115,13 +117,17 @@ async def parse_posts(conn: sqlite3.Connection, config: Config, model_ref: str) 
     Raises:
         RuntimeError: If the provider is not configured, unreachable or lacks the model
     """
-    pending = db.posts_to_parse(conn, model_ref, PROMPT_VERSION)
+    pending = [
+        post
+        for kind, version in PROMPT_VERSIONS.items()
+        for post in db.posts_to_parse(conn, model_ref, kind, version)
+    ]
     async with providers.open_provider(config, model_ref) as provider:
         return await providers.run_jobs(
             pending,
             lambda post: extract(provider, post.kind, post.text),
             lambda post, posting: db.save_extraction(
-                conn, post, model_ref, PROMPT_VERSION, posting
+                conn, post, model_ref, PROMPT_VERSIONS[post.kind], posting
             ),
             providers.concurrency(config, model_ref),
             f"parse {model_ref}",
