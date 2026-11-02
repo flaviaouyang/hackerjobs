@@ -13,3 +13,7 @@ updates:
     directory: /web
     schedule: { interval: weekly }
     groups: { site: { patterns: ["*"] } }
+    ignore:
+      # astro check does not support TypeScript 7 yet; remove once it does.
+      - dependency-name: typescript
+        versions: [">=7"]
