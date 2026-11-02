@@ -37,11 +37,14 @@ const goatcounter = import.meta.env.PUBLIC_GOATCOUNTER_CODE;
             // Count the page without its query string, which holds filters and search text.
             window.goatcounter = { path: () => location.pathname };
           </script>
+          {/* A pinned version with its published hash, so a changed file won't run. */}
           <script
             is:inline
             async
             data-goatcounter={`https://${goatcounter}.goatcounter.com/count`}
-            src="https://gc.zgo.at/count.js"
+            src="https://gc.zgo.at/count.v5.js"
+            crossorigin="anonymous"
+            integrity="sha384-atnOLvQb9t+jTSipvd75X2yginT4PjVbqDdlJAmxMm+wYElFmeR6EmLP5bYeoRVQ"
           />
         </>
       )
