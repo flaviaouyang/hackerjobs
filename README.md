@@ -1,68 +1,114 @@
+<div align="center">
+
 # hackerjobs
 
-A job board for Hacker News' monthly **"Who is hiring?"** and **"Who wants to be hired?"** threads.
-Every post is turned into searchable, filterable fields (roles, pay, location, remote or not,
-technologies, company stage, industry and more), and every entry links back to its original post
-and its author on HN.
+**A job board for Hacker News' monthly _Who is hiring?_ and _Who wants to be hired?_ threads.**
 
-Data starts from January 2026.
+Search and filter every post by role, pay, location, remote work, technologies, company stage and
+industry, in one place, with a link back to each original post.
+
+[![CI](https://github.com/flaviaouyang/hackerjobs/actions/workflows/ci.yml/badge.svg)](https://github.com/flaviaouyang/hackerjobs/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-1b4ef5.svg)](LICENSE)
+[![Site](https://img.shields.io/badge/site-flaviaouyang.github.io%2Fhackerjobs-1b4ef5.svg)](https://flaviaouyang.github.io/hackerjobs/)
+
+[**Open the board →**](https://flaviaouyang.github.io/hackerjobs/)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">
+  <img alt="The hiring board: filters on the left, job cards with roles, location, arrangement and technologies on the right" src="docs/screenshot-light.png" width="860">
+</picture>
+
+</div>
+
+## Features
+
+- **Both threads**: jobs from _Who is hiring?_ and candidates from _Who wants to be hired?_,
+  from January 2026 on, updated daily.
+- **Filters that matter**: kind of work, remote / hybrid / onsite, minimum pay in your currency,
+  seniority, technologies, industry, visa sponsorship, equity.
+- **Pay in your currency**: ranges converted with the Bank of Canada's latest rates.
+- **Across months**: badges for new companies and reposts, and each company's or candidate's
+  earlier posts one click away.
+- **Fast and private**: a static site with search running in your browser, no account, no
+  cookies, light and dark themes.
 
 ## How it works
 
-1. **Ingest**: fetches the threads posted by the `whoishiring` account and their top-level
-   comments from the [official HN API](https://github.com/HackerNews/API). Posts that are deleted
-   or flagged dead are removed.
-2. **Parse**: each post's fields are extracted twice, by simple rules (the candidate template, the
-   `Company | Role | Location` header, pay and email patterns) and by a model with schema-constrained
-   output. The model only copies what the post states; it never writes. Rules and model are merged
-   per field, using whichever scored better on a labelled benchmark (`eval/benchmark.jsonl`).
-3. **Clean up**: text the post doesn't contain is dropped, technologies get canonical names
-   (`hackerjobs/technologies.toml`), currencies become ISO codes, and companies are matched across
-   months by website, then by name.
-4. **Export**: one JSON file per thread and month, plus an index with exchange rates from the
-   [Bank of Canada](https://www.bankofcanada.ca/rates/exchange/), for converting pay.
-5. **Site**: a static [Astro](https://astro.build) site with one [Preact](https://preactjs.com)
-   island for search, filters and pagination. Everything runs in the browser; there is no server.
+```mermaid
+flowchart LR
+    HN["HN API<br/>threads and posts"] --> Rules["Rules<br/>templates, headers, patterns"]
+    HN --> Model["Model<br/>schema-constrained output"]
+    Rules --> Merge["Merge and check<br/>per field"]
+    Model --> Merge
+    Merge --> JSON["JSON per month"]
+    JSON --> Site["Static site<br/>search and filters in the browser"]
+```
+
+1. **Ingest**: threads posted by the `whoishiring` account and their top-level comments, from the
+   [official HN API](https://github.com/HackerNews/API). Deleted and flagged posts are removed.
+2. **Parse**: every post is read twice, by rules (the candidate template, the
+   `Company | Role | Location` header, pay and email patterns) and by a model that may only copy
+   what the post states. For each field, the source that scored better on a
+   [labelled benchmark](eval/benchmark.jsonl) wins.
+3. **Check**: text the post doesn't contain is dropped; claims like company stage or a consulting
+   business need supporting words in the post; technologies get canonical names; companies are
+   matched across months by website, then by name.
+4. **Publish**: one JSON file per thread and month, served with a static
+   [Astro](https://astro.build) site and a single [Preact](https://preactjs.com) island.
 
 Posts in the wrong thread (a candidate in a hiring thread, questions, jokes) are left out.
 
-## Requirements
+> [!NOTE]
+> Details are read by rules and AI, which can make mistakes. Every entry links to its original
+> post: check it before you apply or reach out.
 
-- Python 3.12+ and [uv](https://docs.astral.sh/uv/)
-- [Bun](https://bun.sh)
-- A model to parse with, either:
-  - an [Anthropic API key](https://console.anthropic.com/) in `ANTHROPIC_API_KEY` (the published
-    site uses Claude Haiku 5.5; parsing every post since January 2026 costs about $3), or
-  - [LM Studio](https://lmstudio.ai) running locally, free, with any model that supports
-    structured output
+## Privacy
 
-## Getting started
+- **Only what's on HN**: the board shows public posts, linked to their author's HN profile.
+- **Email addresses stay hidden from scrapers**: many candidates disguise their address
+  (`jo [at] example [dot] com`). The board never publishes a decoded address: addresses are
+  stored scrambled and turned into a link only when someone hovers, focuses or taps it.
+- **Edits and removals follow HN**: delete or edit your post on Hacker News and the board follows
+  at its next daily update. To be removed sooner,
+  [open an issue](https://github.com/flaviaouyang/hackerjobs/issues).
+- **Analytics without tracking**: [GoatCounter](https://www.goatcounter.com) counts page views by
+  path (never the search or filters in the URL) and totals of clicks on Apply, Email and Original
+  post. No cookies, no IP addresses stored.
+
+## Run it yourself
+
+You need Python 3.12+ with [uv](https://docs.astral.sh/uv/), [Bun](https://bun.sh), and a model:
+
+- **[LM Studio](https://lmstudio.ai)**, free and local, with any model that supports structured
+  output, or
+- **the Anthropic API**: set `ANTHROPIC_API_KEY`. Parsing every post since January 2026 with
+  Claude Haiku costs about $3.
 
 ```sh
 uv sync
-cd web && bun install && cd ..
+(cd web && bun install)
 
-uv run hackerjobs sync          # ingest, exchange rates, parse, export
-cd web && bun run dev           # http://localhost:4321/hackerjobs/
+uv run hackerjobs sync     # ingest, exchange rates, parse, export
+cd web && bun run dev      # http://localhost:4321/hackerjobs/
 ```
 
-`sync` only parses posts it hasn't parsed before, so running it again is cheap. The SQLite
-database lives in `data/` and the exported site data in `web/public/data/`; neither is committed.
+`sync` only parses posts it hasn't parsed before, so running it again is cheap. The database
+(`data/`) and the exported data (`web/public/data/`) are not committed.
 
-## Configuration
+### Configuration
 
-`hackerjobs.toml`:
+Settings live in [`hackerjobs.toml`](hackerjobs.toml):
 
 | Setting | Meaning |
 |---|---|
 | `since` | First month to ingest (`YYYY-MM`) |
-| `parse.models` | Models to parse with, as `provider:model`, e.g. `anthropic:claude-haiku-5-5` or `lmstudio:google/gemma-4-e4b` |
+| `parse.models` | Models to parse with, as `provider:model`, e.g. `anthropic:claude-haiku-5-5` or `lmstudio:qwen/qwen3.8-27b` |
 | `publish.models` | Whose extractions go on the site, in order of preference: each post uses the first model that has parsed it |
 | `review` | Optional: have one model review another's extractions |
 | `anthropic.concurrency`, `lmstudio.concurrency` | Parallel requests per provider |
 | `lmstudio.url` | LM Studio's server address |
 
-## Commands
+### Commands
 
 | Command | What it does |
 |---|---|
@@ -75,31 +121,34 @@ database lives in `data/` and the exported site data in `web/public/data/`; neit
 | `hackerjobs eval` | Score extraction on the labelled benchmark, per field and per source |
 | `hackerjobs companies` | List similar company names that are kept apart, for review |
 
-Run any of them with `--help` for options.
+Add `--help` to any of them for options. `scripts/deploy.sh` builds the site and publishes it to
+GitHub Pages.
 
 ## Development
 
 ```sh
-uv run pytest                   # Python tests
+uv run pytest                                      # Python tests
 uv run ruff check . && uv run ruff format --check .
 
 cd web
-bun test                        # site logic tests
-bun run check                   # type check
-bun run build                   # static site in web/dist/
+bun test                                           # site logic tests
+bun run check                                      # type check
+bun run build                                      # static site in web/dist/
 ```
 
-Changing a prompt or the output schema changes that thread kind's prompt version, so the next
-`parse` re-parses only that kind. Run `hackerjobs eval` before and after to compare.
+CI runs all of these on every push and pull request. Changing a prompt or the output schema
+changes that thread kind's prompt version, so the next `parse` re-parses only that kind; run
+`hackerjobs eval` before and after to compare.
 
-## Analytics
+Production builds load GoatCounter with the site code in `web/.env.production`; `bun run dev`
+has no analytics, and GoatCounter ignores visits from localhost.
 
-Production builds load [GoatCounter](https://www.goatcounter.com), with the site code in
-`web/.env.production`:
-no cookies, no IP addresses stored. It counts page views by path only, without the query string
-that holds filters and searches, and totals of clicks on Apply, Email and Original post links.
-`bun run dev` has no analytics, and GoatCounter ignores visits from localhost.
+## Acknowledgements
+
+Posts come from [Hacker News](https://news.ycombinator.com) and its
+[`whoishiring`](https://news.ycombinator.com/submitted?id=whoishiring) threads; exchange rates
+from the [Bank of Canada](https://www.bankofcanada.ca/rates/exchange/).
 
 ## License
 
-[MIT](LICENSE). Posts belong to their authors on Hacker News; the board links to every original.
+[MIT](LICENSE) © Flavia Ouyang. Posts belong to their authors on Hacker News.
