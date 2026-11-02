@@ -7,7 +7,7 @@ from typing import Any
 
 from hackerjobs.identity import name_key
 from hackerjobs.models import CompanyStage, Money, Pay, Posting, Role
-from hackerjobs.rules import STAGE_EVIDENCE, deobfuscate
+from hackerjobs.rules import STAGE_EVIDENCE, deobfuscate, role_category
 from hackerjobs.technologies import canonical_technologies
 
 _CURRENCY_SYMBOLS = {
@@ -281,6 +281,20 @@ def _true_only(value: bool | None, post: _Post) -> bool | None:
     return True if value else None
 
 
+def _role_categories(posting: Posting) -> tuple[str, ...]:
+    """Categories read from role titles.
+
+    The model's reading covers titles the rules can't read; without one they count as Other.
+    """
+    titles = [role if isinstance(role, str) else role.title for role in posting.roles]
+    from_titles = [role_category(title) for title in titles]
+    known = [category for category in from_titles if category]
+    if None not in from_titles and titles:
+        return _unique(known)
+    unread = posting.role_categories or (("Other",) if titles else ())
+    return _unique([*known, *unread])
+
+
 def _same(value: Any, post: _Post) -> Any:
     return value
 
@@ -298,6 +312,7 @@ _CLEANERS: dict[str, Callable[[Any, _Post], Any]] = {
     **dict.fromkeys(("languages", "benefits"), _tidy_texts),
     "interests": _phrases,
     "industries": _deduplicated,
+    "role_categories": _deduplicated,
     "company_stage": _stage,
     **dict.fromkeys(("funding", "valuation"), _money),
     **dict.fromkeys(("company_website", "website", "resume_url"), _link),
@@ -338,4 +353,5 @@ def normalize[P: Posting](text: str, posting: P) -> P:
         field.name: _CLEANERS.get(field.name, _same)(getattr(posting, field.name), post)
         for field in dataclasses.fields(posting)
     }
-    return dataclasses.replace(posting, **values)
+    cleaned = dataclasses.replace(posting, **values)
+    return dataclasses.replace(cleaned, role_categories=_role_categories(cleaned))

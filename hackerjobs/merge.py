@@ -4,7 +4,7 @@ from typing import Any, Literal
 
 from hackerjobs.models import EMPTY_POSTINGS, POSTING_TYPES, Kind, Posting
 from hackerjobs.normalize import normalize
-from hackerjobs.rules import extract_rules
+from hackerjobs.rules import extract_rules, looks_like_seeker
 
 # "union" combines both lists for list fields and acts like "llm_then_rules" for single values.
 Source = Literal["llm", "rules", "rules_then_llm", "llm_then_rules", "union"]
@@ -15,9 +15,11 @@ FIELDS: dict[Kind, tuple[str, ...]] = {
 }
 
 # Where each published field comes from, chosen per field from `hackerjobs eval` scores.
-# Fields not listed use the model's value only.
+# Fields not listed use the model's value only; the model is not asked for "rules" fields.
 FIELD_SOURCES: dict[Kind, dict[str, Source]] = {
     Kind.HIRING: {
+        # Read from the role titles in normalize.
+        "role_categories": "rules",
         "company": "rules_then_llm",
         "company_website": "rules_then_llm",
         "company_stage": "llm_then_rules",
@@ -31,7 +33,7 @@ FIELD_SOURCES: dict[Kind, dict[str, Source]] = {
         "visa_sponsorship": "rules_then_llm",
         "relocation_support": "rules_then_llm",
         "contact": "rules_then_llm",
-        "applications_closed": "rules_then_llm",
+        "applications_closed": "rules",
     },
     Kind.SEEKING: {
         "locations": "rules_then_llm",
@@ -98,3 +100,26 @@ def merge(
         for name in FIELDS[kind]
     }
     return normalize(text, type(empty)(**values))
+
+
+EXPECTED_POST_TYPE = {Kind.HIRING: "job_ad", Kind.SEEKING: "job_seeker"}
+
+
+def in_right_thread(kind: Kind, text: str, fields: Posting) -> bool:
+    """Tell whether a post belongs on its thread's board; posts in the wrong thread are hidden.
+
+    A hiring-thread post written in the candidate template is a candidate. Otherwise the model's
+    reading of what the post is decides, when there is one.
+
+    Args:
+        kind: Thread kind the post was made in
+        text: Plain text of the post
+        fields: Published fields
+
+    Returns:
+        False for candidates in hiring threads, job ads in candidate threads, and posts that are
+        neither (questions, jokes, service ads)
+    """
+    if kind is Kind.HIRING and looks_like_seeker(text):
+        return False
+    return fields.post_type is None or fields.post_type == EXPECTED_POST_TYPE[kind]

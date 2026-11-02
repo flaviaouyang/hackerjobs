@@ -3,7 +3,15 @@ from functools import lru_cache
 from itertools import pairwise
 from typing import Any
 
-from hackerjobs.models import CompanyStage, EmploymentType, Kind, Pay, Remote, Seniority
+from hackerjobs.models import (
+    CompanyStage,
+    EmploymentType,
+    Kind,
+    Pay,
+    Remote,
+    RoleCategory,
+    Seniority,
+)
 from hackerjobs.technologies import canonical_technologies, find_technologies, is_known_technology
 
 EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[a-z]{2,}", re.IGNORECASE)
@@ -155,6 +163,64 @@ STAGE_EVIDENCE: dict[CompanyStage, re.Pattern[str]] = {
     "subsidiary": re.compile(r"\bpart of [A-Z]|(?i:\bsubsidiary\b|\ba division of\b|\bowned by\b)"),
     "nonprofit": re.compile(r"\bnon[\s-]?profit\b|\bnot[\s-]for[\s-]profit\b", re.I),
 }
+# Checked in order: the first match wins, so "Data Engineer" is Data & ML, "Product Designer" is
+# Design and "Product Engineer" is Engineering.
+_ROLE_CATEGORIES: tuple[tuple[RoleCategory, re.Pattern[str]], ...] = (
+    (
+        "Data & ML",
+        re.compile(
+            r"\bdata\b|machine learning|\bml\b|\bmlops\b|\banalytics?\b|\banalyst\b|\bscientist\b"
+            r"|computer vision|\bnlp\b|deep learning",
+            re.I,
+        ),
+    ),
+    ("Design", re.compile(r"\bdesigner\b|\bux\b|\bdesign lead\b|\bhead of design\b", re.I)),
+    (
+        "Engineering",
+        re.compile(
+            r"engineer|\bdeveloper\b|\bprogramm(?:er|ing)\b|\bsre\b|devops|\barchitect\b|\bcto\b"
+            r"|tech(?:nical)? lead|member of technical staff|\bmts\b",
+            re.I,
+        ),
+    ),
+    (
+        "Product",
+        re.compile(
+            r"product manager|product owner|program manager|head of product|product lead|\bpm\b",
+            re.I,
+        ),
+    ),
+    (
+        "Sales & marketing",
+        re.compile(
+            r"\bsales\b|account executive|account manager|\bmarketing\b|\bgrowth\b|devrel"
+            r"|developer advocate|developer relations|partnerships|business development|\bsdr\b"
+            r"|\bbdr\b|copywriter|content writer",
+            re.I,
+        ),
+    ),
+    (
+        "People & finance",
+        re.compile(
+            r"recruit|\btalent\b|\bpeople\b|\bhr\b|human resources|finance|accountant|accounting"
+            r"|bookkeep|\blegal\b|counsel|controller|payroll",
+            re.I,
+        ),
+    ),
+    (
+        "Operations & support",
+        re.compile(
+            r"support|customer success|operations|\bops\b|office manager|(?-i:\bIT\b)|administrator"
+            r"|assistant|chief of staff|project manager|coordinator",
+            re.I,
+        ),
+    ),
+)
+# A post in a hiring thread written in the candidate template is a candidate in the wrong thread.
+_SEEKER_TEMPLATE_KEYS = frozenset(
+    {"location", "remote", "relocate", "technologies", "resume", "email"}
+)
+MIN_SEEKER_TEMPLATE_LINES = 4
 _APPLY_URL = re.compile(
     r"apply|career|jobs?\b|greenhouse|grnh\.se|lever\.co|ashby|workable|personio|notion", re.I
 )
@@ -197,6 +263,38 @@ def seniority(title: str) -> Seniority | None:
         True
     """
     return next((level for level, pattern in _SENIORITY if pattern.search(title)), None)
+
+
+def role_category(title: str) -> RoleCategory | None:
+    """Read a role's kind of work from its title.
+
+    Args:
+        title: Job title
+
+    Returns:
+        The first category whose keywords the title contains, or None if none match
+
+    Example:
+        >>> role_category("Senior Data Engineer")
+        'Data & ML'
+        >>> role_category("Product Designer")
+        'Design'
+        >>> role_category("Account Executive")
+        'Sales & marketing'
+    """
+    return next((category for category, pattern in _ROLE_CATEGORIES if pattern.search(title)), None)
+
+
+def looks_like_seeker(text: str) -> bool:
+    """Tell whether a post follows the candidate template (Location:, Remote:, Technologies:, ...).
+
+    Args:
+        text: Plain text of the post
+
+    Returns:
+        True if it has at least four of the template's lines
+    """
+    return len(_SEEKER_TEMPLATE_KEYS & _template(text).keys()) >= MIN_SEEKER_TEMPLATE_LINES
 
 
 def _template(text: str) -> dict[str, str]:

@@ -2,7 +2,7 @@ import dataclasses
 
 from conftest import make_posting
 
-from hackerjobs.merge import FIELDS, merge
+from hackerjobs.merge import FIELDS, in_right_thread, merge
 from hackerjobs.models import EMPTY_POSTINGS, Kind
 
 TEXT = (
@@ -43,3 +43,17 @@ def test_unlisted_fields_come_from_the_model() -> None:
     merged = merge(Kind.HIRING, TEXT, llm, {"visa_sponsorship": "rules"})
     assert merged.visa_sponsorship is None
     assert merged.industries == ("Fintech",)
+
+
+def test_posts_in_the_wrong_thread() -> None:
+    template = (
+        "Location: Oslo\nRemote: Yes\nWilling to relocate: Yes\nTechnologies: Rust\nEmail: a@b.co"
+    )
+    job = make_posting()
+    assert in_right_thread(Kind.HIRING, TEXT, job)
+    assert not in_right_thread(Kind.HIRING, template, job)
+    assert not in_right_thread(Kind.HIRING, TEXT, dataclasses.replace(job, post_type="other"))
+    candidate = dataclasses.replace(EMPTY_POSTINGS[Kind.SEEKING], post_type="job_ad")
+    assert not in_right_thread(Kind.SEEKING, template, candidate)
+    # Unparsed posts have no type yet and stay unless the template gives them away.
+    assert in_right_thread(Kind.SEEKING, template, EMPTY_POSTINGS[Kind.SEEKING])

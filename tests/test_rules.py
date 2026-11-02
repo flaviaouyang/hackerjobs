@@ -1,7 +1,7 @@
 import pytest
 
 from hackerjobs.models import Kind, Pay
-from hackerjobs.rules import deobfuscate, extract_rules, seniority
+from hackerjobs.rules import deobfuscate, extract_rules, looks_like_seeker, role_category, seniority
 
 
 @pytest.mark.parametrize(
@@ -138,3 +138,30 @@ def test_company_stage_needs_one_clear_stage(text: str, stage: str | None) -> No
 def test_sentence_header_is_not_a_company_name() -> None:
     text = "Backed by Sequoia Capital, Peregrine is the operational AI platform | In-office 4 days"
     assert "company" not in extract_rules(Kind.HIRING, text)
+
+
+@pytest.mark.parametrize(
+    ("title", "category"),
+    [
+        ("Senior Backend Engineer", "Engineering"),
+        ("Product Engineer", "Engineering"),
+        ("Data Engineer", "Data & ML"),
+        ("Machine Learning Engineer", "Data & ML"),
+        ("Product Designer", "Design"),
+        ("Technical Program Manager II", "Product"),
+        ("Account Executive", "Sales & marketing"),
+        ("Technical Recruiter", "People & finance"),
+        ("Customer Support Specialist", "Operations & support"),
+        ("Founder's Office", None),
+    ],
+)
+def test_role_category(title: str, category: str | None) -> None:
+    assert role_category(title) == category
+
+
+def test_candidate_template_is_recognised() -> None:
+    text = (
+        "Location: Oslo\nRemote: Yes\nWilling to relocate: Yes\nTechnologies: Rust\nEmail: a@b.co"
+    )
+    assert looks_like_seeker(text)
+    assert not looks_like_seeker("Acme | Engineer | Oslo\nLocation: Oslo\nRemote: yes")

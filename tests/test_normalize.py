@@ -27,6 +27,7 @@ def test_hiring_fields_are_cleaned() -> None:
     cleaned = normalize(TEXT, posting)
     assert cleaned.locations == ("Boston, MA", "US")
     assert cleaned.roles == (Role("Engineer", Pay(100, 150, "USD", "year"), ("US",), None),)
+    assert cleaned.role_categories == ("Engineering",)
     assert cleaned.technologies == ("PostgreSQL", "C", "C++", "Python")
     assert cleaned.pay == Pay(100000, 150000, "USD", "year")
     assert cleaned.applications_closed is None
@@ -56,6 +57,15 @@ def test_only_copied_text_is_kept() -> None:
     )
     assert cleaned.contact is None
     assert cleaned.pay is None
+
+
+def test_unread_role_titles_take_the_model_reading_or_other() -> None:
+    seeking = dataclasses.replace(
+        EMPTY_POSTINGS[Kind.SEEKING], roles=("Generalist",), role_categories=("Product",)
+    )
+    assert normalize("", seeking).role_categories == ("Product",)
+    hiring = dataclasses.replace(make_posting(), roles=(Role("Chef", None, (), None),))
+    assert normalize("", hiring).role_categories == ("Other",)
 
 
 def test_candidate_fields() -> None:

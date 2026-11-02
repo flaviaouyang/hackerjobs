@@ -37,10 +37,17 @@ INDUSTRIES = (
     "Government & public sector", "Nonprofit", "Scientific research", "Consulting & agencies",
 )  # fmt: skip
 Industry = Literal[INDUSTRIES]
+ROLE_CATEGORIES = (
+    "Engineering", "Data & ML", "Design", "Product", "Sales & marketing", "Operations & support",
+    "People & finance", "Other",
+)  # fmt: skip
+RoleCategory = Literal[ROLE_CATEGORIES]
+# What a post is, whichever thread it was posted in; posts in the wrong thread are hidden.
+PostType = Literal["job_ad", "job_seeker", "other"]
 
 # Every object in the output schema forbids extra keys, so schema-constrained decoding
 # (LM Studio grammars, Anthropic structured outputs) cannot add fields of its own.
-_STRICT = ConfigDict(extra="forbid")
+STRICT = ConfigDict(extra="forbid")
 
 
 class Kind(StrEnum):
@@ -50,7 +57,7 @@ class Kind(StrEnum):
     SEEKING = "seeking"
 
 
-@with_config(_STRICT)
+@with_config(STRICT)
 @dataclass(frozen=True, slots=True)
 class Pay:
     """A stated pay range: amounts in `currency` per `period`."""
@@ -61,7 +68,7 @@ class Pay:
     period: PayPeriod | None
 
 
-@with_config(_STRICT)
+@with_config(STRICT)
 @dataclass(frozen=True, slots=True)
 class Money:
     """A stated amount of money, such as funding raised or a valuation."""
@@ -70,7 +77,7 @@ class Money:
     currency: str | None
 
 
-@with_config(_STRICT)
+@with_config(STRICT)
 @dataclass(frozen=True, slots=True)
 class Role:
     """A job title in a hiring post, with details the post gives for that role only."""
@@ -81,11 +88,13 @@ class Role:
     apply_url: str | None
 
 
-@with_config(_STRICT)
+@with_config(STRICT)
 @dataclass(frozen=True, slots=True)
 class HiringPosting:
     """Fields extracted from a "Who is hiring?" post. Free text is copied from the post."""
 
+    post_type: PostType
+    role_categories: tuple[RoleCategory, ...]
     company: str | None
     company_website: str | None
     company_description: str | None
@@ -120,7 +129,7 @@ class HiringPosting:
     applications_closed: bool | None
 
 
-@with_config(_STRICT)
+@with_config(STRICT)
 @dataclass(frozen=True, slots=True)
 class SeekingPosting:
     """Fields extracted from a "Who wants to be hired?" post. Free text is copied from the post.
@@ -128,7 +137,9 @@ class SeekingPosting:
     The candidate's name is not extracted: the board shows their HN username.
     """
 
+    post_type: PostType
     roles: tuple[str, ...]
+    role_categories: tuple[RoleCategory, ...]
     locations: tuple[str, ...]
     remote: Remote | None
     willing_to_relocate: bool | None
@@ -152,7 +163,7 @@ class SeekingPosting:
 Posting = HiringPosting | SeekingPosting
 
 
-@with_config(_STRICT)
+@with_config(STRICT)
 @dataclass(frozen=True, slots=True)
 class Review[P]:
     """A reviewer model's assessment of another model's extraction.

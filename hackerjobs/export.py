@@ -8,9 +8,9 @@ from typing import Any
 
 from hackerjobs import db
 from hackerjobs.identity import PostSummary, identify
-from hackerjobs.merge import merge
+from hackerjobs.merge import in_right_thread, merge
 from hackerjobs.models import POSTING_ADAPTERS, HiringPosting, Kind, Posting
-from hackerjobs.rules import seniority
+from hackerjobs.rules import role_category, seniority
 
 
 def _write_json(path: Path, payload: object) -> None:
@@ -35,11 +35,12 @@ def _summary(post: db.PublishedPost, fields: Posting) -> PostSummary:
 
 
 def _fields_json(kind: Kind, fields: Posting) -> dict[str, Any]:
-    """Serialize fields, adding seniority read from job titles."""
+    """Serialize fields, adding seniority and role categories read from job titles."""
     data = POSTING_ADAPTERS[kind].dump_python(fields, mode="json")
     if kind is Kind.HIRING:
         for role in data["roles"]:
             role["seniority"] = seniority(role["title"])
+            role["category"] = role_category(role["title"]) or "Other"
         titles = [role["title"] for role in data["roles"]]
     else:
         titles = data["roles"]
@@ -51,8 +52,10 @@ def export_site_data(conn: sqlite3.Connection, model: str, out_dir: Path) -> Non
     """Write the site's data files: one per thread kind and month, plus an index.
 
     Each post's fields are the model's extraction merged with rule-based fields and cleaned up.
-    Each post also carries who it is from (company or candidate key), whether it is their first
-    post, the earlier post it repeats if any, and links to their other posts.
+    Posts in the wrong thread (a candidate in a hiring thread, or neither a job ad nor a
+    candidate) are left out. Each post also carries who it is from (company or candidate key),
+    whether it is their first post, the earlier post it repeats if any, and links to their other
+    posts.
 
     Args:
         conn: Database connection
@@ -67,9 +70,12 @@ def export_site_data(conn: sqlite3.Connection, model: str, out_dir: Path) -> Non
         raise ValueError("No exchange rates stored; run `hackerjobs fx` first")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    posts = [
+    merged = (
         (post, merge(post.kind, post.text, post.posting))
         for post in db.published_posts(conn, model)
+    )
+    posts = [
+        (post, fields) for post, fields in merged if in_right_thread(post.kind, post.text, fields)
     ]
     identities = {}
     for kind in Kind:

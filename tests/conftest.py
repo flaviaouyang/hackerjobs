@@ -28,6 +28,7 @@ def make_posting(company: str = "Acme") -> HiringPosting:
     return dataclasses.replace(
         EMPTY_POSTINGS[Kind.HIRING],
         company=company,
+        post_type="job_ad",
         roles=(Role("Engineer", None, (), None),),
         locations=("Berlin, Germany",),
         remote="remote",

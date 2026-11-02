@@ -17,7 +17,9 @@ from hackerjobs.models import EMPTY_POSTINGS, POSTING_ADAPTERS, Kind, Posting
 RAW = "llm_raw"
 CONFIGURED = "configured"
 VARIANTS = (RAW, *SOURCES, CONFIGURED)
-SET_FIELDS = frozenset({"technologies", "employment_types", "languages", "industries"})
+SET_FIELDS = frozenset(
+    {"technologies", "employment_types", "languages", "industries", "role_categories"}
+)
 FUZZY_SET_FIELDS = frozenset({"roles", "locations", "investors", "benefits", "interests"})
 TEXT_FIELDS = frozenset({
     "company_description", "team_size",
@@ -225,13 +227,12 @@ def score(posts: list[BenchmarkPost], extractions: Mapping[int, Posting]) -> Eva
         adapter = POSTING_ADAPTERS[post.kind]
         for name, posting in variants(post, extractions.get(post.id)).items():
             predicted = adapter.dump_python(posting, mode="json")
+            expected = post.expected
             for field in FIELDS[post.kind]:
-                value = score_field(field, predicted[field], post.expected[field])
+                value = score_field(field, predicted[field], expected[field])
                 field_scores[name].setdefault(f"{post.kind}.{field}", []).append(value)
                 if name == CONFIGURED and value < 1:
-                    mismatches.append(
-                        Mismatch(post.id, field, post.expected[field], predicted[field])
-                    )
+                    mismatches.append(Mismatch(post.id, field, expected[field], predicted[field]))
     scores = {
         name: {field: fmean(values) for field, values in fields.items()}
         for name, fields in field_scores.items()

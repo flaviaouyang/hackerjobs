@@ -1,8 +1,21 @@
+import dataclasses
 import sqlite3
+from typing import Any
+
+from pydantic import TypeAdapter, with_config
 
 from hackerjobs import db, providers
 from hackerjobs.config import Config
-from hackerjobs.models import INDUSTRIES, POSTING_ADAPTERS, Kind
+from hackerjobs.merge import FIELD_SOURCES
+from hackerjobs.models import (
+    EMPTY_POSTINGS,
+    INDUSTRIES,
+    POSTING_TYPES,
+    ROLE_CATEGORIES,
+    STRICT,
+    Kind,
+    Posting,
+)
 
 PRINCIPLES = """\
 You extract structured data from a Hacker News post. Copy information exactly as the post states \
@@ -10,6 +23,9 @@ it: never summarize, infer, guess or write anything yourself. Text fields hold w
 the post. Use null or an empty list for anything the post does not state."""
 
 SHARED_RULES = """\
+- post_type: "job_ad" if the post offers jobs, "job_seeker" if the author is looking for work, \
+"other" for anything else (questions, comments, jokes, advertising a service). Judge the post \
+itself, whichever thread it is in.
 - locations: cities, countries or regions as specific as stated, e.g. "Austin, TX", \
 "Berlin, Germany", "US", "EU". Never the words remote, hybrid or onsite.
 - remote: "remote" if fully remote work is possible (even if restricted to a region), \
@@ -57,14 +73,14 @@ commitment, e.g. "at least 30h per week"), education (as required).
 - interview_process: as written.
 - contact: the email address or application URL to use.
 - application_instructions: extra steps applicants are asked to take (subject line, what to \
-include or mention), as written; not just where to apply.
-- applications_closed: true only if the post says applications are closed."""
+include or mention), as written; not just where to apply."""
 
 SEEKING_RULES = f"""\
 This post is a candidate looking for work.
 
 - roles: the job titles they are looking for, one per title; if they name none, the title they \
 describe themselves as ("Full-Stack AI Engineer with 10 years..."). Never a sentence.
+- role_categories: the kinds of work those roles are, from the role categories below.
 - willing_to_relocate: true or false only if stated.
 {SHARED_RULES}
 - pay: their expected pay, if stated.
@@ -75,23 +91,55 @@ immediately", "from December 2026"), education (as written).
 in", "would love to", "best fit"), as short phrases naming an industry ("games industry" -> \
 "game development") or a kind of work ("distributed systems", "developer tools"). Empty if they \
 only describe their background; never their skills, past work or hobbies.
-- contact: their email address. website, linkedin, github, resume_url: their links."""
+- contact: their email address. linkedin, github, resume_url: their links."""
 
 INDUSTRY_LIST = f"Industries: {', '.join(INDUSTRIES)}."
+ROLE_CATEGORY_LIST = (
+    f"Role categories: {', '.join(ROLE_CATEGORIES)}. Engineering covers software, infrastructure, "
+    "hardware and security engineering; Data & ML covers data science, data engineering and "
+    "machine learning; Product covers product and program management."
+)
 
 SYSTEM_PROMPTS = {
     Kind.HIRING: f"{PRINCIPLES}\n\n{HIRING_RULES}\n\n{INDUSTRY_LIST}",
-    Kind.SEEKING: f"{PRINCIPLES}\n\n{SEEKING_RULES}",
+    Kind.SEEKING: f"{PRINCIPLES}\n\n{SEEKING_RULES}\n\n{ROLE_CATEGORY_LIST}",
+}
+
+
+def _model_type(kind: Kind) -> type:
+    """The kind's posting without the fields published from rules alone.
+
+    Every field makes the constrained-output grammar bigger, and the hiring schema is close to the
+    API's limit, so the model is not asked for fields it would not be used for.
+    """
+    posting_type = POSTING_TYPES[kind]
+    asked = [
+        (field.name, field.type)
+        for field in dataclasses.fields(posting_type)
+        if FIELD_SOURCES[kind].get(field.name) != "rules"
+    ]
+    model_type = dataclasses.make_dataclass(
+        posting_type.__name__,
+        asked,
+        namespace={"__doc__": posting_type.__doc__},
+        frozen=True,
+        slots=True,
+    )
+    return with_config(STRICT)(model_type)
+
+
+MODEL_ADAPTERS: dict[Kind, TypeAdapter[Any]] = {
+    kind: TypeAdapter(_model_type(kind)) for kind in Kind
 }
 
 # One version per post kind, so changing the hiring prompt does not re-parse candidates.
 PROMPT_VERSIONS = {
-    kind: providers.prompt_version([POSTING_ADAPTERS[kind]], prompt)
+    kind: providers.prompt_version([MODEL_ADAPTERS[kind]], prompt)
     for kind, prompt in SYSTEM_PROMPTS.items()
 }
 
 
-async def extract(provider: providers.Provider, kind: Kind, text: str):
+async def extract(provider: providers.Provider, kind: Kind, text: str) -> Posting:
     """Extract a post's fields with schema-constrained output.
 
     Args:
@@ -100,9 +148,11 @@ async def extract(provider: providers.Provider, kind: Kind, text: str):
         text: Plain text of the post
 
     Returns:
-        The kind's posting dataclass
+        The kind's posting, with fields published from rules alone left empty
     """
-    return await provider.complete(POSTING_ADAPTERS[kind], SYSTEM_PROMPTS[kind], text)
+    output = await provider.complete(MODEL_ADAPTERS[kind], SYSTEM_PROMPTS[kind], text)
+    asked = {field.name: getattr(output, field.name) for field in dataclasses.fields(output)}
+    return dataclasses.replace(EMPTY_POSTINGS[kind], **asked)
 
 
 async def parse_posts(conn: sqlite3.Connection, config: Config, model_ref: str) -> int:
