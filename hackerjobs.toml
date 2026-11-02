@@ -1,0 +1,26 @@
+# First month to ingest (YYYY-MM).
+since = "2026-01"
+
+# Models are "<provider>:<model id>". Providers: "anthropic" (key from ANTHROPIC_API_KEY)
+# and "lmstudio" (free, local).
+
+[anthropic]
+concurrency = 16
+
+[lmstudio]
+url = "http://localhost:1234/v1"
+# Keep at or below LM Studio's "Max concurrent predictions" setting.
+concurrency = 4
+
+[parse]
+# Every post is parsed by each of these models; results are stored per model.
+models = ["anthropic:claude-haiku-5-5"]
+
+# Uncomment to have one model review another's extractions. Corrections are published.
+# [review]
+# reviewer = "anthropic:claude-haiku-5-5"
+# of = "lmstudio:google/gemma-4-e4b"
+
+[publish]
+# Whose extractions (with review corrections) go on the site.
+model = "anthropic:claude-haiku-5-5"
