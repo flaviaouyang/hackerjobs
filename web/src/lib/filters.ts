@@ -12,6 +12,8 @@ export interface Filters {
   hideReposts: boolean;
   currency: string;
   sort: Sort;
+  /** 1-based results page. */
+  page: number;
   // Hiring only
   minPay: number | null;
   seniority: string[];
@@ -35,6 +37,7 @@ export const DEFAULT_FILTERS: Filters = {
   hideReposts: true,
   currency: 'USD',
   sort: 'newest',
+  page: 1,
   minPay: null,
   seniority: [],
   industry: null,
@@ -68,6 +71,7 @@ export function parseFilters(search: string): Filters {
     hideReposts: !flag('reposts'),
     currency: params.get('cur') ?? DEFAULT_FILTERS.currency,
     sort: params.get('sort') === 'pay' ? 'pay' : 'newest',
+    page: Math.max(1, Math.floor(number(params.get('page')) ?? 1)),
     minPay: number(params.get('minpay')),
     seniority: list(params.get('level')),
     industry: params.get('industry'),
@@ -95,6 +99,7 @@ export function serializeFilters(filters: Filters): string {
   put('reposts', filters.hideReposts ? null : '1');
   put('cur', filters.currency === DEFAULT_FILTERS.currency ? null : filters.currency);
   put('sort', filters.sort === 'newest' ? null : filters.sort);
+  put('page', filters.page > 1 ? String(filters.page) : null);
   put('minpay', filters.minPay === null ? null : String(filters.minPay));
   put('level', filters.seniority.join(','));
   put('industry', filters.industry);

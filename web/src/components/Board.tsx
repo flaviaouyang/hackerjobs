@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { applyFilters, DEFAULT_FILTERS, type Filters as FilterState, parseFilters, serializeFilters } from '../lib/filters';
 import { monthLabel } from '../lib/format';
+import { pageWindow } from '../lib/pages';
 import { buildIndex, searchIds } from '../lib/search';
 import type { HiringPost, Index, Kind, Post, SeekingPost } from '../lib/types';
 import { CandidateCard } from './CandidateCard';
@@ -9,7 +10,7 @@ import { HistoryDialog } from './HistoryDialog';
 import { JobCard } from './JobCard';
 
 const BASE = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 20;
 const COMMON_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'CHF', 'INR', 'JPY', 'SGD'];
 const LABELS: Record<Kind, string> = { hiring: 'Hiring', seeking: 'Seeking' };
 
@@ -30,6 +31,29 @@ function loadMonth(kind: Kind, month: string): Promise<Post[]> {
   return months.get(key) as Promise<Post[]>;
 }
 
+function Pagination({ page, count, onPage }: { page: number; count: number; onPage: (page: number) => void }) {
+  return (
+    <nav class="pages" aria-label="Pages">
+      <button type="button" disabled={page === 1} onClick={() => onPage(page - 1)}>
+        Previous
+      </button>
+      {pageWindow(page, count).map((number, index) =>
+        number === null ? (
+          <span key={`gap-${index}`} class="gap" aria-hidden="true">…</span>
+        ) : (
+          <button key={number} type="button" aria-current={number === page ? 'page' : undefined}
+            aria-label={`Page ${number}`} onClick={() => onPage(number)}>
+            {number}
+          </button>
+        ),
+      )}
+      <button type="button" disabled={page === count} onClick={() => onPage(page + 1)}>
+        Next
+      </button>
+    </nav>
+  );
+}
+
 function CloseIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -45,7 +69,7 @@ export function Board({ kind }: { kind: Kind }) {
   const [ready, setReady] = useState(false);
   const [posts, setPosts] = useState<Post[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [limit, setLimit] = useState(PAGE_SIZE);
+  const resultsTop = useRef<HTMLElement>(null);
   const [history, setHistory] = useState<Post | null>(null);
   const drawer = useRef<HTMLDialogElement>(null);
   const hiring = kind === 'hiring';
@@ -81,10 +105,16 @@ export function Board({ kind }: { kind: Kind }) {
     return [...COMMON_CURRENCIES.filter((code) => known.includes(code)), ...known.filter((code) => !COMMON_CURRENCIES.includes(code)).sort()];
   }, [index]);
 
+  // Any change other than turning the page starts again from the first page.
   const update = useCallback((changes: Partial<FilterState>) => {
-    setFilters((current) => ({ ...current, ...changes }));
-    setLimit(PAGE_SIZE);
+    setFilters((current) => ({ ...current, page: 1, ...changes }));
   }, []);
+  const pageCount = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
+  const page = Math.min(filters.page, pageCount);
+  const turnPage = (next: number) => {
+    update({ page: next });
+    resultsTop.current?.scrollIntoView({ block: 'start' });
+  };
   const loadHistory = useCallback((other: string) => loadMonth(kind, other), [kind]);
   const tabLink = (other: Kind) => `${BASE}${other}/${month ? `?month=${month}` : ''}`;
   const filterPanel = <Filters kind={kind} posts={posts ?? []} filters={filters} update={update} />;
@@ -140,7 +170,7 @@ export function Board({ kind }: { kind: Kind }) {
 
         <div class="layout">
           <aside class="sidebar" aria-label="Filters">{filterPanel}</aside>
-          <section class="results" aria-label="Results" aria-busy={!posts && !error}>
+          <section class="results" aria-label="Results" aria-busy={!posts && !error} ref={resultsTop}>
             <div class="summary">
               <h1>
                 {posts ? results.length.toLocaleString('en-US') : '…'} {hiring ? 'jobs' : 'candidates'}
@@ -164,18 +194,14 @@ export function Board({ kind }: { kind: Kind }) {
             {!error && !posts && <p class="status">Loading…</p>}
             {posts && !results.length && <p class="status">No posts match these filters.</p>}
             {index &&
-              results.slice(0, limit).map((post) =>
+              results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((post) =>
                 hiring ? (
                   <JobCard key={post.id} post={post as HiringPost} currency={filters.currency} rates={index.rates} onHistory={setHistory} />
                 ) : (
                   <CandidateCard key={post.id} post={post as SeekingPost} currency={filters.currency} rates={index.rates} onHistory={setHistory} />
                 ),
               )}
-            {results.length > limit && (
-              <button class="button quiet more" type="button" onClick={() => setLimit(limit + PAGE_SIZE)}>
-                Load more ({(results.length - limit).toLocaleString('en-US')} left)
-              </button>
-            )}
+            {pageCount > 1 && <Pagination page={page} count={pageCount} onPage={turnPage} />}
           </section>
         </div>
       </main>

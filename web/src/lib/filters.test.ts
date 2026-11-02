@@ -27,9 +27,9 @@ const POSTS = [
 describe('filters', () => {
   test('round-trip through the URL, leaving out defaults', () => {
     expect(serializeFilters(DEFAULT_FILTERS)).toBe('');
-    const filters = { ...DEFAULT_FILTERS, month: '2026-10', remote: ['remote' as const], tech: ['Rust'], minPay: 150000, currency: 'EUR', hideReposts: false };
+    const filters = { ...DEFAULT_FILTERS, month: '2026-10', remote: ['remote' as const], tech: ['Rust'], minPay: 150000, currency: 'EUR', hideReposts: false, page: 3 };
     const query = serializeFilters(filters);
-    expect(query).toBe('?month=2026-10&remote=remote&tech=Rust&reposts=1&cur=EUR&minpay=150000');
+    expect(query).toBe('?month=2026-10&remote=remote&tech=Rust&reposts=1&cur=EUR&page=3&minpay=150000');
     expect(parseFilters(query)).toEqual(filters);
   });
 
