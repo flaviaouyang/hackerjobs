@@ -94,10 +94,11 @@ Changing a prompt or the output schema changes that thread kind's prompt version
 
 ## Analytics
 
-Builds with `PUBLIC_GOATCOUNTER_CODE` set (the deployed site) load [GoatCounter](https://www.goatcounter.com):
+Production builds load [GoatCounter](https://www.goatcounter.com), with the site code in
+`web/.env.production`:
 no cookies, no IP addresses stored. It counts page views by path only, without the query string
 that holds filters and searches, and totals of clicks on Apply, Email and Original post links.
-Builds without the variable have no analytics.
+`bun run dev` has no analytics, and GoatCounter ignores visits from localhost.
 
 ## License
 
