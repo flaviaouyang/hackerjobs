@@ -57,7 +57,7 @@ database lives in `data/` and the exported site data in `web/public/data/`; neit
 |---|---|
 | `since` | First month to ingest (`YYYY-MM`) |
 | `parse.models` | Models to parse with, as `provider:model`, e.g. `anthropic:claude-haiku-5-5` or `lmstudio:google/gemma-4-e4b` |
-| `publish.model` | Whose extractions go on the site |
+| `publish.models` | Whose extractions go on the site, in order of preference: each post uses the first model that has parsed it |
 | `review` | Optional: have one model review another's extractions |
 | `anthropic.concurrency`, `lmstudio.concurrency` | Parallel requests per provider |
 | `lmstudio.url` | LM Studio's server address |

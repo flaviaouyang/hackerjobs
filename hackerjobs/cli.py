@@ -64,7 +64,7 @@ def _review_posts(args: argparse.Namespace, config: Config, conn: sqlite3.Connec
 def _export(args: argparse.Namespace, config: Config, conn: sqlite3.Connection) -> None:
     """Write the site's data files."""
     out_dir = args.out or DEFAULT_OUT_DIR
-    export_site_data(conn, args.publish_model or config.publish.model, out_dir)
+    export_site_data(conn, args.publish_model or config.publish.models, out_dir)
     logging.info("Exported site data to %s", out_dir)
 
 
@@ -98,7 +98,7 @@ def _companies(args: argparse.Namespace, config: Config, conn: sqlite3.Connectio
     """List company names that look alike but are kept apart, for manual review."""
     names = {
         fields.company
-        for post in db.published_posts(conn, args.publish_model or config.publish.model)
+        for post in db.published_posts(conn, args.publish_model or config.publish.models)
         if post.kind is Kind.HIRING
         and isinstance(fields := merge(post.kind, post.text, post.posting), HiringPosting)
         and fields.company
@@ -138,7 +138,10 @@ def build_parser() -> argparse.ArgumentParser:
     out = argparse.ArgumentParser(add_help=False)
     out.add_argument("--out", type=Path, help=f"output directory (default: {DEFAULT_OUT_DIR})")
     out.add_argument(
-        "--publish-model", help="model whose results are published (default: config publish.model)"
+        "--publish-model",
+        action="append",
+        help="model whose results are published; repeatable, first preferred "
+        "(default: config publish.models)",
     )
 
     commands.add_parser(
@@ -184,7 +187,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--report", type=Path, help="write the list to this Markdown file"
     )
     companies_parser.add_argument(
-        "--publish-model", help="model whose results are used (default: config publish.model)"
+        "--publish-model",
+        action="append",
+        help="model whose results are used; repeatable, first preferred "
+        "(default: config publish.models)",
     )
     companies_parser.set_defaults(handler=_companies)
 

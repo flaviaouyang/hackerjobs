@@ -17,7 +17,7 @@ THREAD = Thread(100, Kind.HIRING, "2026-10")
 CONFIG = Config(
     since="2026-01",
     parse=ParseConfig(("lmstudio:m",)),
-    publish=PublishConfig("lmstudio:m"),
+    publish=PublishConfig(("lmstudio:m",)),
     lmstudio=LMStudioConfig("http://lm/v1", 2),
     anthropic=AnthropicConfig(4),
 )

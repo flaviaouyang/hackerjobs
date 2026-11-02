@@ -11,7 +11,7 @@ concurrency = 8
 [parse]
 models = ["anthropic:claude-haiku-5-5", "lmstudio:google/gemma-4-e4b"]
 [publish]
-model = "anthropic:claude-haiku-5-5"
+models = ["anthropic:claude-haiku-5-5"]
 """
 
 

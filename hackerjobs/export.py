@@ -1,5 +1,6 @@
 import json
 import sqlite3
+from collections.abc import Sequence
 from dataclasses import asdict
 from datetime import UTC, datetime
 from itertools import groupby
@@ -48,7 +49,7 @@ def _fields_json(kind: Kind, fields: Posting) -> dict[str, Any]:
     return data
 
 
-def export_site_data(conn: sqlite3.Connection, model: str, out_dir: Path) -> None:
+def export_site_data(conn: sqlite3.Connection, models: Sequence[str], out_dir: Path) -> None:
     """Write the site's data files: one per thread kind and month, plus an index.
 
     Each post's fields are the model's extraction merged with rule-based fields and cleaned up.
@@ -59,7 +60,7 @@ def export_site_data(conn: sqlite3.Connection, model: str, out_dir: Path) -> Non
 
     Args:
         conn: Database connection
-        model: Model reference whose extractions are published
+        models: Models whose extractions are published, in order of preference
         out_dir: Directory to write into; created if missing
 
     Raises:
@@ -72,7 +73,7 @@ def export_site_data(conn: sqlite3.Connection, model: str, out_dir: Path) -> Non
 
     merged = (
         (post, merge(post.kind, post.text, post.posting))
-        for post in db.published_posts(conn, model)
+        for post in db.published_posts(conn, models)
     )
     posts = [
         (post, fields) for post, fields in merged if in_right_thread(post.kind, post.text, fields)

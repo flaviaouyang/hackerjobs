@@ -10,7 +10,7 @@ from hackerjobs.models import Kind, Review
 
 def published(conn: sqlite3.Connection) -> dict[int, str | None]:
     return {
-        post.id: post.posting and post.posting.company for post in db.published_posts(conn, "m")
+        post.id: post.posting and post.posting.company for post in db.published_posts(conn, ["m"])
     }
 
 
@@ -50,6 +50,17 @@ def test_published_uses_latest_extraction_and_review_corrections(conn: sqlite3.C
 
     db.save_review(conn, item, "r", "rv2", dataclasses.replace(corrected, verdict="correct"))
     assert published(conn) == {1: "New", 2: None}
+
+
+def test_published_prefers_earlier_models(conn: sqlite3.Connection) -> None:
+    db.save_extraction(conn, pending(1), "local", "v1", make_posting("Local"))
+    db.save_extraction(conn, pending(1), "better", "v1", make_posting("Better"))
+    db.save_extraction(conn, pending(2), "local", "v1", make_posting("Only local"))
+    posts = db.published_posts(conn, ["better", "local"])
+    assert {post.id: post.posting and post.posting.company for post in posts} == {
+        1: "Better",
+        2: "Only local",
+    }
 
 
 def test_rates_round_trip(conn: sqlite3.Connection) -> None:

@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -296,26 +296,31 @@ def load_rates(conn: sqlite3.Connection) -> Rates | None:
     return Rates(rows[0][1], {currency: rate for currency, _, rate in rows})
 
 
-def published_posts(conn: sqlite3.Connection, model: str) -> Iterator[PublishedPost]:
+def published_posts(conn: sqlite3.Connection, models: Sequence[str]) -> Iterator[PublishedPost]:
     """Yield every post with its extraction to publish, ordered by kind, month and newest first.
 
-    The extraction is the model's latest one, replaced by the latest review's corrections when that
-    review corrected it.
+    The extraction is the latest one by the first of `models` that parsed the post, replaced by the
+    latest review's corrections when that review corrected it.
 
     Args:
         conn: Database connection
-        model: Model whose extractions are published
+        models: Models whose extractions are published, in order of preference
 
     Yields:
-        Posts with their extraction
+        Posts with their extraction; None for posts no listed model has parsed
     """
+    marks = ", ".join("?" * len(models))
+    preferred = (
+        f"SELECT id FROM extractions WHERE post_id = p.id AND model IN ({marks}) "
+        f"ORDER BY instr(?, '|' || model || '|'), id DESC LIMIT 1"
+    )
     rows = conn.execute(
         "SELECT t.kind, t.month, p.id, p.author, p.posted_at, p.html, p.text, "
         f"COALESCE(({LATEST_REVIEW_DATA}), e.data) "
         "FROM posts p JOIN threads t ON t.id = p.thread_id "
-        f"LEFT JOIN extractions e ON e.id = ({LATEST_EXTRACTION}) "
+        f"LEFT JOIN extractions e ON e.id = ({preferred}) "
         "ORDER BY t.kind, t.month, p.posted_at DESC",
-        (model,),
+        (*models, f"|{'|'.join(models)}|"),
     )
     for kind, month, post_id, author, posted_at, markup, text, data in rows:
         yield PublishedPost(

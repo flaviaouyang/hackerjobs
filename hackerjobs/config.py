@@ -51,9 +51,13 @@ class ReviewConfig:
 
 @dataclass(frozen=True, slots=True)
 class PublishConfig:
-    """Model whose extractions, with review corrections, are published."""
+    """Models whose extractions, with review corrections, are published.
 
-    model: ModelRef
+    Each post uses the first model in the list that has parsed it, so a cheaper model can parse
+    new posts while earlier posts keep a better model's results.
+    """
+
+    models: Annotated[tuple[ModelRef, ...], Field(min_length=1)]
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,7 +67,7 @@ class Config:
     Attributes:
         since: First month to ingest, formatted YYYY-MM
         parse: Models that extract fields
-        publish: Model whose results are exported
+        publish: Models whose results are exported, in order of preference
         lmstudio: LM Studio settings, required for "lmstudio:" models
         anthropic: Anthropic settings, required for "anthropic:" models
         review: Optional reviewer setup; reviews are skipped when absent
