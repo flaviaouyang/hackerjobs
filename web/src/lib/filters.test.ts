@@ -27,9 +27,9 @@ const POSTS = [
 describe('filters', () => {
   test('round-trip through the URL, leaving out defaults', () => {
     expect(serializeFilters(DEFAULT_FILTERS)).toBe('');
-    const filters = { ...DEFAULT_FILTERS, month: '2026-10', remote: ['remote' as const], tech: ['Rust'], minPay: 150000, currency: 'EUR', hideReposts: false, page: 3 };
+    const filters = { ...DEFAULT_FILTERS, month: '2026-10', remote: ['remote' as const], tech: ['Rust'], minPay: 150000, currency: 'EUR', hideReposts: true, page: 3 };
     const query = serializeFilters(filters);
-    expect(query).toBe('?month=2026-10&remote=remote&tech=Rust&reposts=1&cur=EUR&page=3&minpay=150000');
+    expect(query).toBe('?month=2026-10&remote=remote&tech=Rust&noreposts=1&cur=EUR&page=3&minpay=150000');
     expect(parseFilters(query)).toEqual(filters);
   });
 
@@ -40,9 +40,12 @@ describe('filters', () => {
     expect(filters.sort).toBe('newest');
   });
 
-  test('hides reposts and closed posts by default', () => {
+  test('shows reposts and hides closed posts by default', () => {
     const ids = applyFilters(POSTS, 'hiring', DEFAULT_FILTERS, RATES, null).map((post) => post.id);
-    expect(ids).toEqual([2, 1]);
+    // Post 4 gives no details, so it is listed with the brief posts, last.
+    expect(ids).toEqual([2, 1, 4]);
+    const noReposts = { ...DEFAULT_FILTERS, hideReposts: true };
+    expect(applyFilters(POSTS, 'hiring', noReposts, RATES, null).map((post) => post.id)).toEqual([2, 1]);
   });
 
   test('lists brief posts after detailed ones', () => {
@@ -50,7 +53,7 @@ describe('filters', () => {
     expect(isBrief(posts[4])).toBe(true);
     expect(isBrief(posts[5])).toBe(false);
     const ids = applyFilters(posts, 'hiring', DEFAULT_FILTERS, RATES, null).map((post) => post.id);
-    expect(ids).toEqual([6, 2, 1, 5]);
+    expect(ids).toEqual([6, 2, 1, 5, 4]);
   });
 
   test('matches candidates open to any chosen arrangement', () => {
@@ -82,7 +85,7 @@ describe('filters', () => {
 
   test('applies search hits, location and sorting by pay', () => {
     const filters = { ...DEFAULT_FILTERS, sort: 'pay' as const };
-    expect(applyFilters(POSTS, 'hiring', filters, RATES, null).map((post) => post.id)).toEqual([1, 2]);
+    expect(applyFilters(POSTS, 'hiring', filters, RATES, null).map((post) => post.id)).toEqual([1, 2, 4]);
     expect(applyFilters(POSTS, 'hiring', { ...filters, location: 'london' }, RATES, null).map((post) => post.id)).toEqual([2]);
     expect(applyFilters(POSTS, 'hiring', filters, RATES, new Set([2])).map((post) => post.id)).toEqual([2]);
   });

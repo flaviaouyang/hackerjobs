@@ -37,7 +37,7 @@ export const DEFAULT_FILTERS: Filters = {
   remote: [],
   work: [],
   tech: [],
-  hideReposts: true,
+  hideReposts: false,
   currency: 'USD',
   sort: 'newest',
   page: 1,
@@ -72,7 +72,7 @@ export function parseFilters(search: string): Filters {
     ),
     work: list(params.get('work')),
     tech: list(params.get('tech')),
-    hideReposts: !flag('reposts'),
+    hideReposts: flag('noreposts'),
     currency: params.get('cur') ?? DEFAULT_FILTERS.currency,
     sort: params.get('sort') === 'pay' ? 'pay' : 'newest',
     page: Math.max(1, Math.floor(number(params.get('page')) ?? 1)),
@@ -101,7 +101,7 @@ export function serializeFilters(filters: Filters): string {
   put('remote', filters.remote.join(','));
   put('work', filters.work.join(','));
   put('tech', filters.tech.join(','));
-  put('reposts', filters.hideReposts ? null : '1');
+  put('noreposts', filters.hideReposts ? '1' : null);
   put('cur', filters.currency === DEFAULT_FILTERS.currency ? null : filters.currency);
   put('sort', filters.sort === 'newest' ? null : filters.sort);
   put('page', filters.page > 1 ? String(filters.page) : null);
