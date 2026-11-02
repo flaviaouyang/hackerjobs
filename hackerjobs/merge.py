@@ -28,7 +28,7 @@ FIELD_SOURCES: dict[Kind, dict[str, Source]] = {
         "technologies": "union",
         "min_experience_years": "llm_then_rules",
         "equity": "llm_then_rules",
-        "visa_sponsorship": "rules",
+        "visa_sponsorship": "rules_then_llm",
         "relocation_support": "rules_then_llm",
         "contact": "rules_then_llm",
         "applications_closed": "rules_then_llm",
@@ -36,7 +36,7 @@ FIELD_SOURCES: dict[Kind, dict[str, Source]] = {
     Kind.SEEKING: {
         "locations": "rules_then_llm",
         "remote": "rules_then_llm",
-        "willing_to_relocate": "rules",
+        "willing_to_relocate": "rules_then_llm",
         "timezone": "rules_then_llm",
         "experience_years": "llm_then_rules",
         "contact": "rules_then_llm",
