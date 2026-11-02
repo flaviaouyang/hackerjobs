@@ -133,3 +133,8 @@ def test_combined_experience_is_not_a_requirement() -> None:
 )
 def test_company_stage_needs_one_clear_stage(text: str, stage: str | None) -> None:
     assert extract_rules(Kind.HIRING, text).get("company_stage") == stage
+
+
+def test_sentence_header_is_not_a_company_name() -> None:
+    text = "Backed by Sequoia Capital, Peregrine is the operational AI platform | In-office 4 days"
+    assert "company" not in extract_rules(Kind.HIRING, text)

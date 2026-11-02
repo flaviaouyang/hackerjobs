@@ -61,6 +61,7 @@ _EXPERIENCE = re.compile(
     r"(\d{1,2})\+?\s*(?:years|yrs)\b(?:\s+of)?(?:\s+\w+){0,3}?\s+experience", re.I
 )
 
+MAX_NAME_WORDS = 5
 _HEADER_SEPARATOR = re.compile(r"\s+[|\u2014\u2013]\s+|\s*\|\s*")
 _ROLE_WORDS = re.compile(
     r"\b(engineer|developer|manager|designer|scientist|lead|architect|intern)s?\b", re.I
@@ -333,8 +334,11 @@ def _hiring_fields(text: str) -> dict[str, Any]:
     header = lines[0] if lines else ""
     segments = [segment.strip() for segment in _HEADER_SEPARATOR.split(header) if segment.strip()]
     fields: dict[str, Any] = {}
-    if len(segments) > 1 and not _ROLE_WORDS.search(segments[0]):
-        fields["company"] = URL.sub("", segments[0]).split(" (")[0].strip()
+    name = URL.sub("", segments[0]).split(" (")[0].strip() if segments else ""
+    # A first segment longer than a name is a sentence ("Backed by Sequoia, Peregrine is..."),
+    # so the model's reading of the company is used instead.
+    if len(segments) > 1 and not _ROLE_WORDS.search(name) and len(name.split()) <= MAX_NAME_WORDS:
+        fields["company"] = name
     websites = (
         match.group() for match in _DOMAIN.finditer(header) if not _JOB_BOARDS.search(match.group())
     )
