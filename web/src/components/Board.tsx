@@ -201,6 +201,10 @@ export function Board({ kind }: { kind: Kind }) {
                 {posts ? results.length.toLocaleString('en-US') : '…'} {hiring ? 'jobs' : 'candidates'}
               </h1>
               {month && <span class="label">{monthLabel(month)}</span>}
+              <p class="notice">
+                Details are read from each post by rules and AI, which can make mistakes. Check the original post
+                before you apply or reach out.
+              </p>
               <button class="button quiet filters-button" type="button" onClick={() => drawer.current?.showModal()}>
                 Filters
               </button>
