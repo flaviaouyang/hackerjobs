@@ -43,7 +43,7 @@ def test_seniority(title: str, level: str | None) -> None:
 def test_seeker_template() -> None:
     text = (
         "Location: Limerick, Ireland (UTC)\nRemote: Yes\nWilling to relocate: No\n"
-        "Technologies: Postgres, C/C++, Legal, Kubernetes\nRésumé/CV: https://cv.example/me.pdf\n"
+        "Technologies: Postgres, C/C++, Legal, Kubernetes, C#/.NET\nRésumé/CV: https://cv.example/me.pdf\n"
         "LinkedIn: https://www.linkedin.com/in/jo/\nGitHub: https://github.com/jo\n"
         "Email: jo [at] example [dot] com\n\nEngineer with 7+ years of experience."
     )
@@ -53,7 +53,7 @@ def test_seeker_template() -> None:
         "remote": "remote",
         "arrangements": ("remote",),
         "willing_to_relocate": False,
-        "technologies": ("PostgreSQL", "C", "C++", "Kubernetes"),
+        "technologies": ("PostgreSQL", "C", "C++", "Kubernetes", "C#", ".NET"),
         "experience_years": 7,
         "contact": "jo@example.com",
         "linkedin": "https://www.linkedin.com/in/jo",
