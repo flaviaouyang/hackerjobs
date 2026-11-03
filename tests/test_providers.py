@@ -12,7 +12,7 @@ from hackerjobs.models import POSTING_ADAPTERS, Kind
 ADAPTER = POSTING_ADAPTERS[Kind.HIRING]
 
 
-def lmstudio_handler(content: str, field: str = "content"):
+def lmstudio_handler(content: str, field: str = "content", finish_reason: str = "stop"):
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith("/models"):
             return httpx.Response(200, json={"data": [{"id": "m"}]})
@@ -20,8 +20,10 @@ def lmstudio_handler(content: str, field: str = "content"):
         if "response_format" in body:
             schema = body["response_format"]["json_schema"]["schema"]
             assert schema["additionalProperties"] is False
+            assert body["max_tokens"] == providers.MAX_OUTPUT_TOKENS
         message = {"content": "", field: content}
-        return httpx.Response(200, json={"choices": [{"message": message}]})
+        choice = {"message": message, "finish_reason": finish_reason}
+        return httpx.Response(200, json={"choices": [choice]})
 
     return handler
 
@@ -40,6 +42,12 @@ def test_lmstudio_reads_answers_filed_as_reasoning(mock_http) -> None:
     answer = ADAPTER.dump_json(make_posting()).decode()
     mock_http(lmstudio_handler(answer, field="reasoning_content"))
     assert asyncio.run(complete_once()) == make_posting()
+
+
+def test_lmstudio_rejects_truncated_output(mock_http) -> None:
+    mock_http(lmstudio_handler("{", finish_reason="length"))
+    with pytest.raises(providers.ExtractionError, match="output limit"):
+        asyncio.run(complete_once())
 
 
 def test_lmstudio_rejects_unknown_model(mock_http) -> None:
