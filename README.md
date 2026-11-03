@@ -9,7 +9,6 @@ industry, in one place, with a link back to each original post.
 
 🔄: **Updated Every Day at 7AM EST.**
 
-[![CI](https://github.com/flaviaouyang/hackerjobs/actions/workflows/ci.yml/badge.svg)](https://github.com/flaviaouyang/hackerjobs/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-1b4ef5.svg)](LICENSE)
 [![Deployment](https://github.com/flaviaouyang/hackerjobs/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/flaviaouyang/hackerjobs/actions/workflows/pages/pages-build-deployment)
 
