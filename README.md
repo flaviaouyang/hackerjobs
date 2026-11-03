@@ -5,7 +5,9 @@
 **A job board for Hacker News' monthly _Who is hiring?_ and _Who wants to be hired?_ threads.**
 
 Search and filter every post by role, pay, location, remote work, technologies, company stage and
-industry, in one place, with a link back to each original post.
+industry, in one place, with a link back to each original post. 
+
+🔄: **Updated Every Day at 7AM EST.**
 
 [![CI](https://github.com/flaviaouyang/hackerjobs/actions/workflows/ci.yml/badge.svg)](https://github.com/flaviaouyang/hackerjobs/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-1b4ef5.svg)](LICENSE)
