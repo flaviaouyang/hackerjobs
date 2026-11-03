@@ -13,8 +13,9 @@ url = "http://localhost:1234/v1"
 concurrency = 4
 
 [parse]
-# Every post is parsed by each of these models; results are stored per model.
-models = ["anthropic:claude-haiku-5-5"]
+# Every post is parsed by each of these models; results are stored per model. A post that a
+# model listed earlier in publish.models has already parsed is skipped.
+models = ["lmstudio:zai-org/glm-4.7-flash"]
 
 # Uncomment to have one model review another's extractions. Corrections are published.
 # [review]
@@ -24,4 +25,4 @@ models = ["anthropic:claude-haiku-5-5"]
 [publish]
 # Whose extractions (with review corrections) go on the site. Each post uses the first model in
 # the list that has parsed it.
-models = ["anthropic:claude-haiku-5-5"]
+models = ["anthropic:claude-haiku-5-5", "lmstudio:zai-org/glm-4.7-flash"]

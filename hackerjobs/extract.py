@@ -158,6 +158,9 @@ async def extract(provider: providers.Provider, kind: Kind, text: str) -> Postin
 async def parse_posts(conn: sqlite3.Connection, config: Config, model_ref: str) -> int:
     """Extract fields with a model for every post it has not parsed at its kind's prompt version.
 
+    Posts that a model listed before it in `publish.models` has parsed are skipped: their
+    published fields come from that model anyway.
+
     Args:
         conn: Database connection
         config: Loaded configuration
@@ -169,11 +172,15 @@ async def parse_posts(conn: sqlite3.Connection, config: Config, model_ref: str) 
     Raises:
         RuntimeError: If the provider is not configured, unreachable or lacks the model
     """
+    preferred = config.publish.models
+    covered_by = preferred[: preferred.index(model_ref)] if model_ref in preferred else ()
     pending = [
         post
         for kind, version in PROMPT_VERSIONS.items()
-        for post in db.posts_to_parse(conn, model_ref, kind, version)
+        for post in db.posts_to_parse(conn, model_ref, kind, version, covered_by)
     ]
+    if not pending:
+        return 0
     async with providers.open_provider(config, model_ref) as provider:
         return await providers.run_jobs(
             pending,

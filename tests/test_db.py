@@ -63,6 +63,14 @@ def test_published_prefers_earlier_models(conn: sqlite3.Connection) -> None:
     }
 
 
+def test_posts_covered_by_a_preferred_model_are_not_parsed(conn: sqlite3.Connection) -> None:
+    db.save_extraction(conn, pending(1), "better", "old", make_posting())
+    ids = [post.id for post in db.posts_to_parse(conn, "local", Kind.HIRING, "v1", ["better"])]
+    assert ids == [2]
+    every = [post.id for post in db.posts_to_parse(conn, "local", Kind.HIRING, "v1")]
+    assert sorted(every) == [1, 2]
+
+
 def test_rates_round_trip(conn: sqlite3.Connection) -> None:
     assert db.load_rates(conn) is None
     db.save_rates(conn, Rates("2026-10-30", {"USD": 1.396, "CAD": 1.0}))

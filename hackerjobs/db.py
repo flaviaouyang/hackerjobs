@@ -165,7 +165,11 @@ def save_thread(
 
 
 def posts_to_parse(
-    conn: sqlite3.Connection, model: str, kind: Kind, prompt_version: str
+    conn: sqlite3.Connection,
+    model: str,
+    kind: Kind,
+    prompt_version: str,
+    covered_by: Sequence[str] = (),
 ) -> list[PendingPost]:
     """List posts of a kind without an extraction by a model at a prompt version, newest first.
 
@@ -174,16 +178,20 @@ def posts_to_parse(
         model: Model reference
         kind: Thread kind
         prompt_version: Version of that kind's extraction prompt
+        covered_by: Models whose extraction, at any version, makes parsing a post unnecessary
 
     Returns:
         Posts to parse
     """
+    marks = ", ".join("?" * len(covered_by))
     rows = conn.execute(
         "SELECT p.id, t.kind, p.text FROM posts p JOIN threads t ON t.id = p.thread_id "
         "WHERE t.kind = ? AND NOT EXISTS (SELECT 1 FROM extractions e "
         "WHERE e.post_id = p.id AND e.model = ? AND e.prompt_version = ?) "
+        "AND NOT EXISTS (SELECT 1 FROM extractions e "
+        f"WHERE e.post_id = p.id AND e.model IN ({marks})) "
         "ORDER BY t.month DESC, p.id",
-        (kind, model, prompt_version),
+        (kind, model, prompt_version, *covered_by),
     )
     return [PendingPost(post_id, Kind(kind), text) for post_id, kind, text in rows]
 
