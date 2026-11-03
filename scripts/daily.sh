@@ -14,6 +14,9 @@ lms server start
 # Free the model's memory afterwards, whether or not the sync succeeds.
 trap 'lms unload --all >/dev/null 2>&1 || true' EXIT
 uv run hackerjobs sync
-"$repo_root/scripts/backup.sh"
+# A failed backup should not hold back the site; the job still exits non-zero to flag it.
+status=0
+"$repo_root/scripts/backup.sh" || { echo "== backup failed, deploying anyway" >&2; status=1; }
 "$repo_root/scripts/deploy.sh"
 echo "== done"
+exit "$status"
