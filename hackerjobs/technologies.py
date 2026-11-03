@@ -16,6 +16,8 @@ _AMBIGUOUS = frozenset(_TABLE["ambiguous"])
 _UNSCANNABLE = frozenset(_TABLE["unscannable"])
 _SPACES = re.compile(r"\s+")
 _VERSION = re.compile(r"[\d.x+]+")
+# A name followed by a version: "Qt5", "ROS 2", "Next.js 15", "YOLOv8", "OAuth 2.0".
+_VERSIONED = re.compile(r"(?P<base>.+?)[\s-]?v?\d+(?:\.\d+)*(?:\.x)?")
 # Unknown multi-word, all-lowercase items ("agent orchestration") are descriptions, not names.
 _LOWERCASE_PHRASE = re.compile(r"[a-z]+(?: [a-z]+)+")
 
@@ -36,11 +38,22 @@ def canonical_technologies(name: str) -> list[str]:
         ['C', 'C++']
         >>> canonical_technologies("LLMs")
         []
+        >>> [canonical_technologies(name) for name in (".NET 8", "Qt5", "S3")]
+        [['.NET'], ['Qt'], ['S3']]
     """
-    cleaned = _SPACES.sub(" ", name).strip(" .-*")
+    # A leading dot belongs to names like ".NET"; trailing ones end sentences.
+    cleaned = _SPACES.sub(" ", name).strip(" -*").rstrip(".").removeprefix(". ")
     key = cleaned.casefold()
     if key in CANONICAL:
         return [CANONICAL[key]]
+    # A known name with a version is that name. One-letter bases are left alone: in "S3",
+    # "R2" or "V8" the number is part of the name.
+    if (
+        (match := _VERSIONED.fullmatch(key))
+        and len(match["base"]) > 1
+        and match["base"] in CANONICAL
+    ):
+        return [CANONICAL[match["base"]]]
     if (
         not key
         or key in CONCEPTS

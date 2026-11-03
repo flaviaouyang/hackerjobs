@@ -413,7 +413,9 @@ def _seeker_arrangements(value: str) -> tuple[Remote, ...]:
 
 
 def _split_technologies(value: str) -> list[str]:
-    items = (item.strip(" .-*:") for item in _TECH_SEPARATORS.split(_TECH_FILLER.sub("", value)))
+    # Only trailing dots go: a leading one belongs to names like ".NET".
+    parts = _TECH_SEPARATORS.split(_TECH_FILLER.sub("", value))
+    items = (item.strip(" -*:").rstrip(".").removeprefix(". ") for item in parts)
     return [item for item in items if item and len(item.split()) <= 4]
 
 
