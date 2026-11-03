@@ -121,8 +121,19 @@ Settings live in [`hackerjobs.toml`](hackerjobs.toml):
 | `hackerjobs eval` | Score extraction on the labelled benchmark, per field and per source |
 | `hackerjobs companies` | List similar company names that are kept apart, for review |
 
-Add `--help` to any of them for options. `scripts/deploy.sh` builds the site and publishes it to
-GitHub Pages.
+Add `--help` to any of them for options.
+
+### Scripts
+
+| Script | What it does |
+|---|---|
+| `scripts/deploy.sh` | Build the site and publish it to GitHub Pages |
+| `scripts/backup.sh` | Snapshot the database, gzipped, into iCloud Drive (`HACKERJOBS_BACKUP_DIR` to change), keeping the newest 14 |
+| `scripts/daily.sh` | Start LM Studio's server, sync, back up and deploy |
+| `scripts/install-daily.sh` | Run `daily.sh` every day with launchd (at 7:00, or the hour given) |
+
+To restore a backup: `gunzip -c hackerjobs-YYYY-MM-DD.db.gz > data/hackerjobs.db`. The database
+holds decoded email addresses, so keep backups in private storage only.
 
 ## Development
 
