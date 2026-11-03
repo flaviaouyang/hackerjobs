@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Back up the database as a consistent, checked, gzipped SQLite snapshot, keeping the newest
 # HACKERJOBS_BACKUP_KEEP (default 14). The database holds decoded email addresses, so backups
-# belong in private storage only; the default is iCloud Drive.
+# belong in private storage only. The default is a local folder because macOS stops launchd jobs
+# from listing iCloud Drive or touching files an earlier run left there.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
-backup_dir="${HACKERJOBS_BACKUP_DIR:-$HOME/Library/Mobile Documents/com~apple~CloudDocs/Backups/hackerjobs}"
+backup_dir="${HACKERJOBS_BACKUP_DIR:-$HOME/Backups/hackerjobs}"
 keep="${HACKERJOBS_BACKUP_KEEP:-14}"
 snapshot="$(mktemp -d)"
 trap 'rm -rf "$snapshot"' EXIT
