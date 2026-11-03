@@ -19,7 +19,8 @@ REQUEST_TIMEOUT = 600
 # text fields are sent as plain strings, with "" meaning "not stated".
 EMPTY_TEXT_NOTE = "Use an empty string for any text field the post does not state."
 PROGRESS_EVERY = 25
-MAX_OUTPUT_TOKENS = 4096
+# Real extractions stay under ~1,100 tokens; the cap stops a model stuck repeating itself.
+MAX_OUTPUT_TOKENS = 2048
 ANTHROPIC_RETRIES = 5
 
 
@@ -119,6 +120,7 @@ class LMStudio:
 
         Raises:
             httpx.HTTPStatusError: If LM Studio returns an error
+            ExtractionError: If the output is truncated
             pydantic.ValidationError: If the output does not match the schema
         """
         response = await self.client.post(
@@ -126,6 +128,7 @@ class LMStudio:
             json={
                 "model": self.model,
                 "temperature": 0,
+                "max_tokens": MAX_OUTPUT_TOKENS,
                 "response_format": {
                     "type": "json_schema",
                     "json_schema": {"name": "result", "strict": True, "schema": _schema(adapter)},
@@ -137,7 +140,10 @@ class LMStudio:
             },
         )
         response.raise_for_status()
-        message = response.json()["choices"][0]["message"]
+        choice = response.json()["choices"][0]
+        if choice.get("finish_reason") == "length":
+            raise ExtractionError(f"{self.model} hit the {MAX_OUTPUT_TOKENS}-token output limit")
+        message = choice["message"]
         # Models with a thinking chat template (Qwen, GLM) can have LM Studio file the whole
         # schema-constrained answer under reasoning_content and leave content empty.
         return adapter.validate_json(
