@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Back up the database as a consistent, checked, gzipped SQLite snapshot, keeping the last
-# HACKERJOBS_BACKUP_KEEP days (default 14). The database holds decoded email addresses, so backups
+# Back up the database as a consistent, checked, gzipped SQLite snapshot, keeping the newest
+# HACKERJOBS_BACKUP_KEEP (default 14). The database holds decoded email addresses, so backups
 # belong in private storage only; the default is iCloud Drive.
 set -euo pipefail
 
@@ -23,11 +23,7 @@ target="$backup_dir/hackerjobs-$(date +%Y-%m-%d).db.gz"
 gzip -c "$snapshot/hackerjobs.db" > "$target.partial"
 mv "$target.partial" "$target"
 
-# macOS lets launchd jobs write to iCloud Drive but not list it, so expired backups are removed by
-# name: those from $keep days ago back to a year before that.
-expired=()
-for ((age = keep; age < keep + 366; age++)); do
-  expired+=("$backup_dir/hackerjobs-$(date -v-"${age}"d +%Y-%m-%d).db.gz")
-done
-rm -f -- "${expired[@]}"
+# Names sort by date, so everything after the newest $keep is old.
+find "$backup_dir" -maxdepth 1 -name 'hackerjobs-*.db.gz' | sort -r | tail -n "+$((keep + 1))" |
+  while IFS= read -r old; do rm -- "$old"; done
 echo "Backed up to $target ($(du -h "$target" | cut -f1))"
