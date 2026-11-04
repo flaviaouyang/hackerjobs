@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { applyLink, dayLabel, monthLabel, someOf, unscramble, withScheme } from './format';
+import { agoLabel, applyLink, dayLabel, monthLabel, someOf, unscramble, withScheme } from './format';
 import type { HiringFields } from './types';
 
 const fields = (overrides: Partial<HiringFields>) => ({ roles: [], contact: null, company_website: null, ...overrides }) as HiringFields;
@@ -9,6 +9,15 @@ describe('format', () => {
     expect(monthLabel('2026-10')).toBe('October 2026');
     expect(monthLabel('2026-10', 'short')).toBe('Oct');
     expect(dayLabel(1_791_000_000)).toBe('Oct 3');
+  });
+
+  test('says how long ago', () => {
+    const now = Date.parse('2026-11-04T15:00:00Z');
+    expect(agoLabel('2026-11-04T14:59:50Z', now)).toBe('this minute');
+    expect(agoLabel('2026-11-04T14:35:00Z', now)).toBe('25 minutes ago');
+    expect(agoLabel('2026-11-04T12:46:27Z', now)).toBe('2 hours ago');
+    expect(agoLabel('2026-11-03T12:00:00Z', now)).toBe('yesterday');
+    expect(agoLabel('2026-10-16T13:00:00Z', now)).toBe('19 days ago');
   });
 
   test('picks where to apply', () => {

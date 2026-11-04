@@ -12,6 +12,16 @@ export function dayLabel(timestamp: number): string {
   return new Date(timestamp * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
+const RELATIVE = new Intl.RelativeTimeFormat('en-US', { numeric: 'auto' });
+const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [['day', 86_400], ['hour', 3_600], ['minute', 60]];
+
+/** "2 hours ago" for an ISO timestamp, in the largest whole unit up to days. */
+export function agoLabel(iso: string, now = Date.now()): string {
+  const seconds = (Date.parse(iso) - now) / 1000;
+  const [unit, size] = UNITS.find(([, size]) => Math.abs(seconds) >= size) ?? UNITS[UNITS.length - 1];
+  return RELATIVE.format(Math.round(seconds / size), unit);
+}
+
 /** Add https:// to bare domains such as "acme.com/jobs". */
 export function withScheme(url: string): string {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
