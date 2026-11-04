@@ -24,10 +24,12 @@ const goatcounter = import.meta.env.PUBLIC_GOATCOUNTER_CODE;
     <meta name="color-scheme" content="light dark" />
     <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.svg`} type="image/svg+xml" />
     <script is:inline>
-      // Apply a saved light/dark choice before the page paints (see ThemeSwitch).
+      // Apply a saved light/dark choice and a dismissed banner before the page paints (see
+      // ThemeSwitch and Banner).
       try {
         const theme = localStorage.getItem('theme');
         if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+        if (localStorage.getItem('banner') === 'dismissed') document.documentElement.dataset.banner = 'dismissed';
       } catch {}
     </script>
     {
