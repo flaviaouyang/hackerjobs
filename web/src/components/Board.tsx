@@ -9,7 +9,8 @@ import { CandidateCard } from './CandidateCard';
 import { Filters } from './Filters';
 import { HistoryDialog } from './HistoryDialog';
 import { JobCard } from './JobCard';
-import { Out, REPO } from './shared';
+import { Banner } from './Banner';
+import { CloseIcon, Out, REPO } from './shared';
 import { ThemeSwitch } from './ThemeSwitch';
 
 const BASE = import.meta.env.BASE_URL.replace(/\/?$/, '/');
@@ -54,14 +55,6 @@ function Pagination({ page, count, onPage }: { page: number; count: number; onPa
         Next
       </button>
     </nav>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-      <path d="M6 6l12 12M18 6L6 18" />
-    </svg>
   );
 }
 
@@ -184,6 +177,7 @@ export function Board({ kind }: { kind: Kind }) {
           </div>
         </div>
       </header>
+      <Banner updated={index?.generated_at ?? null} />
 
       <main id="main" class="wrap">
         <form class="search" role="search" onSubmit={(event) => event.preventDefault()}>

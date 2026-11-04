@@ -9,6 +9,15 @@ export type Detail = [string, ComponentChildren];
 
 export const REPO = 'https://github.com/flaviaouyang/hackerjobs';
 
+/** An × for close and dismiss buttons. */
+export function CloseIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  );
+}
+
 /** A label/value list that skips empty values. */
 export function Details({ items, class: className }: { items: Detail[]; class?: string }) {
   const shown = items.filter(([, value]) => value !== null && value !== undefined && value !== '' && value !== false);
