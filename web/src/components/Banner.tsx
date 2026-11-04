@@ -30,7 +30,7 @@ export function Banner({ updated }: { updated: string | null }) {
           <span class="sep" aria-hidden="true">·</span>
           Spot a mistake? <Out href={`${REPO}/issues/new?template=wrong-details.yml`}>Report it</Out>
           <span class="sep" aria-hidden="true">·</span>
-          <Out href={REPO}>Contributions welcome</Out>
+          <Out href={`${REPO}#contributing`}>Contributions welcome</Out>
         </p>
         <button type="button" class="close" aria-label="Dismiss" title="Dismiss" onClick={dismiss}>
           <CloseIcon />
