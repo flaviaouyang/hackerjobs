@@ -24,7 +24,7 @@ industry, in one place, with a link back to each original post.
 ## Features
 
 - **Both threads**: jobs from _Who is hiring?_ and candidates from _Who wants to be hired?_,
-  from January 2026 on, updated daily.
+  from January 2026 on, updated several times a day while a thread is new.
 - **Filters that matter**: kind of work, remote / hybrid / onsite, minimum pay in your currency,
   seniority, technologies, industry, visa sponsorship, equity.
 - **Pay in your currency**: ranges converted with the Bank of Canada's latest rates.
@@ -70,7 +70,7 @@ Posts in the wrong thread (a candidate in a hiring thread, questions, jokes) are
   (`jo [at] example [dot] com`). The board never publishes a decoded address: addresses are
   stored scrambled and turned into a link only when someone hovers, focuses or taps it.
 - **Edits and removals follow HN**: delete or edit your post on Hacker News and the board follows
-  at its next daily update. To be removed sooner,
+  at its next update. To be removed sooner,
   [open an issue](https://github.com/flaviaouyang/hackerjobs/issues).
 - **Analytics without tracking**: [GoatCounter](https://www.goatcounter.com) counts page views by
   path (never the search or filters in the URL) and totals of clicks on Apply, Email and Original
@@ -131,7 +131,7 @@ Add `--help` to any of them for options.
 | `scripts/deploy.sh` | Build the site and publish it to GitHub Pages |
 | `scripts/backup.sh` | Snapshot the database, gzipped, into `~/Backups/hackerjobs` (`HACKERJOBS_BACKUP_DIR` to change), keeping the newest 14 |
 | `scripts/daily.sh` | Start LM Studio's server, sync, back up and deploy |
-| `scripts/install-daily.sh` | Run `daily.sh` every day with launchd (at 7:00, or the hour given) |
+| `scripts/install-daily.sh` | Run `daily.sh` with launchd while the month's threads take posts (1st-10th and the 16th) |
 
 To restore a backup: `gunzip -c hackerjobs-YYYY-MM-DD.db.gz > data/hackerjobs.db`. The database
 holds decoded email addresses, so keep backups in private storage only.
