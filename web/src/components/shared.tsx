@@ -7,6 +7,8 @@ import type { Pay, Post, Rates } from '../lib/types';
 
 export type Detail = [string, ComponentChildren];
 
+export const REPO = 'https://github.com/flaviaouyang/hackerjobs';
+
 /** A label/value list that skips empty values. */
 export function Details({ items, class: className }: { items: Detail[]; class?: string }) {
   const shown = items.filter(([, value]) => value !== null && value !== undefined && value !== '' && value !== false);
