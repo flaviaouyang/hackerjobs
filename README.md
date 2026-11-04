@@ -61,7 +61,8 @@ Posts in the wrong thread (a candidate in a hiring thread, questions, jokes) are
 
 > [!NOTE]
 > Details are read by rules and AI, which can make mistakes. Every entry links to its original
-> post: check it before you apply or reach out.
+> post: check it before you apply or reach out. Spot a mistake?
+> [Report it](https://github.com/flaviaouyang/hackerjobs/issues/new?template=wrong-details.yml).
 
 ## Privacy
 
@@ -154,6 +155,15 @@ changes that thread kind's prompt version, so the next `parse` re-parses only th
 
 Production builds load GoatCounter with the site code in `web/.env.production`; `bun run dev`
 has no analytics, and GoatCounter ignores visits from localhost.
+
+## Contributing
+
+Contributions are welcome:
+
+- **Wrong details on a card**: [report them](https://github.com/flaviaouyang/hackerjobs/issues/new?template=wrong-details.yml).
+- **Bugs**: [open an issue](https://github.com/flaviaouyang/hackerjobs/issues/new?template=bug.yml).
+- **Code**: open a pull request, with the checks under [Development](#development) passing. For
+  anything large, open an issue first so we can agree on the approach.
 
 ## Acknowledgements
 
