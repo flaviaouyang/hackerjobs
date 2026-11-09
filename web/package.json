@@ -13,10 +13,10 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@astrojs/preact": "6.1.1",
+    "@astrojs/preact": "6.1.2",
     "@fontsource-variable/geist": "5.3.0",
     "@fontsource-variable/geist-mono": "5.3.0",
-    "astro": "7.4.4",
+    "astro": "7.4.7",
     "minisearch": "7.2.0",
     "preact": "11.1.1"
   },
